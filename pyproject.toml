@@ -1,5 +1,5 @@
 [project]
-name = "'"
+name = "articlegenerate"
 version = "0.1.0"
 description = ""
 authors = [
@@ -8,6 +8,9 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "requests (>=2.32.5,<3.0.0)",
+    "websocket-client (>=1.9.0,<2.0.0)",
+    "flask (>=3.1.2,<4.0.0)"
 ]
 
 
