@@ -11,8 +11,6 @@ ws_url_template =f"ws://127.0.0.1:8188/ws?clientId={client_id}"
 http_url = "http://127.0.0.1:8188/prompt"
 
 # --- 生成 client_id ---
-
-
 # --- 读取 workflow ---
 with open(workflow_file, "r", encoding="utf-8") as f:
     workflow = json.load(f)
