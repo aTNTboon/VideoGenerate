@@ -1,9 +1,7 @@
 
 import uuid
 import re
-import Setting
-
-from BaseService import  BaseService
+from MyCode.BaseService import  BaseService
 
 class SecenePaser(BaseService):
     def __init__(self,uid):

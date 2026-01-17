@@ -1,0 +1,11 @@
+# 忽略 Python 编译文件
+*.pyc
+__pycache__/
+
+# 忽略音频文件
+*.wav
+
+# 忽略临时文件、系统文件
+*.tmp
+*.log
+.DS_Store
