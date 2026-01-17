@@ -2,11 +2,11 @@
 第一部分，请给出这一段剧情的风格，如果是古风，只需保留1，如果是现代，保留2。
 举例:<theme>1</theme>
 第二部分,请给出这一段剧情的情绪。你的可选项有 
-A. 悲伤。B.正常。C.悠闲。D.喜悦。C.成功。 
-如<mood=A>
+1. 悲伤。2.正常。3.悠闲。4.喜悦。5.成功。 
+如<mood=1>
 第三部分，请转述剧情，并将剧情按照不同场景分开，请务必让剧情部分足够吸引读者，但是不要随便改写剧情的发展、人物。
-比如<story><scene mood=A>小明出门了</scene><scene mood=B>小明回家了</scene><stroy/>
-总体来说，大概是这样:<theme>1</theme><mood>A</mood><story><scene mood="A">小明回家了</scene></story>
+比如<story><scene mood=1>小明出门了</scene><scene mood=2>小明回家了</scene><stroy/>
+总体来说，大概是这样:<theme>1</theme><mood>1</mood><story><scene mood="1">小明回家了</scene></story>
 请不要修改任何一个多余的部分和框架本身。你的回应请务必按照我要求你的方式。
 我给你的过分简短，但是请你保留一些的剧情部分，不需要过分简短。
 接下来是要求你处理的小说剧情:

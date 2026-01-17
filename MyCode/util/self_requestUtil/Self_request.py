@@ -1,6 +1,6 @@
 import json
 import requests
-from Setting import Setting
+from  MyCode.Setting import Setting
 from Base_Request import Base_Request
 
 class RequestAI(Base_Request):
