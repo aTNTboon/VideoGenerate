@@ -15,6 +15,3 @@ class Setting:
         "1":"GuFeng",
     }
     src_language="Chinese"
-    role_name:str=""
-    word_timestamps=False
-    fp16=False

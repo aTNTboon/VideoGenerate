@@ -35,7 +35,7 @@ class SumService(BaseService):
             videoName=f"{video_id}_{uid}"
             self.UID2Video_Id[video_id].append(str(videoName))
             self.TTS.audio_request(videoName,item["text"])
-            self.SU.generate_src(videoName,content)
+            self.SU.generate_src(videoName,item["text"])
             base: Base_Image_Generate_Util = StylizedModel[Setting.style[str(item['theme_id'])]].value
             video_Generator:Base_Video_Generate_Util = Base_Video_Generate_Util(base,self.RU)
             video_Generator.generateFrame(videoName,item["text"])
