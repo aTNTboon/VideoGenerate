@@ -7,5 +7,5 @@ class Setting:
     SUBTITLE_MODEL="medium"
     WorkFlows=["/article/MyCode/workflows/ImageFlow/GuFeng.json"]
     CompyPath="ws://127.0.0.1:8188/ws"
-    CompyPromptUrl='http://127.0.0.1:8188/prompt'
+    CompyPromptUrl='http://127.0.0.1:8188/'
     ImagePath="/article/image/"

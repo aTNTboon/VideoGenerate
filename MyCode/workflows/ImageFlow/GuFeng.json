@@ -1,14 +1,14 @@
 {
   "4": {
     "inputs": {
-      "seed": 650833852786564,
-      "steps": 32,
+      "seed": 463352243909568,
+      "steps": 20,
       "cfg": 6.5,
-      "sampler_name": "dpmpp_2m",
-      "scheduler": "karras",
+      "sampler_name": "euler",
+      "scheduler": "exponential",
       "denoise": 1,
       "model": [
-        "16",
+        "30",
         0
       ],
       "positive": [
@@ -20,7 +20,7 @@
         0
       ],
       "latent_image": [
-        "9",
+        "20",
         0
       ]
     },
@@ -31,9 +31,9 @@
   },
   "5": {
     "inputs": {
-      "text": "sexual intercourse,masterpiece, best quality, absurdres, highres, very aesthetic,white silk, detailed, beautiful girl,anime screencap,nsfw,hentai,pussy,masturbation,man,woman，",
+      "text": "pussy,dick,sex,Woman on top,3p,Standing position，feet suspended above the ground,4-panel comic layout, quad split screen,clear facial features,eye contact with viewer,Profile full-body shot，uniform white stockings,  sweet lolita white hosiery,white stokings,masterpiece, best quality, absurdres, highres, very aesthetic, high quality, detailed, insanely detailed, beautiful, very awa, anime screencap,nsfw，Japanese anime fantasy illustration, pink-haired girl, wearing an ornate pink and white gradient kimono with golden embroidery and flowing ribbons, ethereal and alluring demeanor, soft dreamy color palette of pink, white, pale gold and lavender, set against a misty green mountain and cloud backgroung",
       "clip": [
-        "16",
+        "30",
         1
       ]
     },
@@ -44,9 +44,9 @@
   },
   "6": {
     "inputs": {
-      "text": "lowres, bad quality, worst quality,bad anatomy, sketch, jpeg artifacts, ugly, poorly drawn,blurry, transparent background,tears, censored, (simple background:1.6), artist name, signature, watermark, holding",
+      "text": "lowres, bad quality, worst quality,bad anatomy, sketch, jpeg artifacts, ugly, poorly drawn,blurry,bad quality,worst quality,worst detail,sketch,censor,hat",
       "clip": [
-        "16",
+        "30",
         1
       ]
     },
@@ -62,7 +62,7 @@
         0
       ],
       "vae": [
-        "15",
+        "25",
         2
       ]
     },
@@ -71,45 +71,77 @@
       "title": "VAE Decode"
     }
   },
-  "8": {
+  "20": {
     "inputs": {
-      "images": [
-        "7",
-        0
-      ]
-    },
-    "class_type": "PreviewImage",
-    "_meta": {
-      "title": "Preview Image"
-    }
-  },
-  "9": {
-    "inputs": {
-      "width": 728,
-      "height": 512,
-      "batch_size": 4
+      "width": 1000,
+      "height": 1000,
+      "batch_size": 1
     },
     "class_type": "EmptyLatentImage",
     "_meta": {
       "title": "Empty Latent Image"
     }
   },
-  "15": {
+  "21": {
     "inputs": {
-      "ckpt_name": "matrixHentai_v50.safetensors"
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "25": {
+    "inputs": {
+      "ckpt_name": "waiIllustriousSDXL_v160.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
       "title": "Load Checkpoint"
     }
   },
-  "16": {
+  "28": {
     "inputs": {
-      "ckpt_name": "cornflowerStylizedAnime_12.safetensors"
+      "pixels": [
+        "29",
+        0
+      ]
     },
-    "class_type": "CheckpointLoaderSimple",
+    "class_type": "VAEEncode",
     "_meta": {
-      "title": "Load Checkpoint"
+      "title": "VAE Encode"
+    }
+  },
+  "29": {
+    "inputs": {
+      "image": "2099c0923104af9cbf89211075f4b4f6a0907b556e503-7wfI5i_fw658webp.webp"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "30": {
+    "inputs": {
+      "lora_name": "yellow_cum_slider.safetensors",
+      "strength_model": 0.8,
+      "strength_clip": 0.8,
+      "model": [
+        "25",
+        0
+      ],
+      "clip": [
+        "25",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
     }
   }
 }

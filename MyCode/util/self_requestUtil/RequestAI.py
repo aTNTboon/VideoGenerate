@@ -3,6 +3,7 @@ import requests
 from  MyCode.Setting import Setting
 from Base_Request import Base_Request
 
+
 class RequestAI(Base_Request):
     def __init__(self) -> None:
         pass
@@ -55,3 +56,4 @@ class RequestAI(Base_Request):
                     full_response += content
                     print(full_response)
         return full_response
+    
