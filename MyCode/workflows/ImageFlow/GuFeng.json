@@ -31,7 +31,7 @@
   },
   "5": {
     "inputs": {
-      "text": "pussy,dick,sex,Woman on top,3p,Standing position，feet suspended above the ground,4-panel comic layout, quad split screen,clear facial features,eye contact with viewer,Profile full-body shot，uniform white stockings,  sweet lolita white hosiery,white stokings,masterpiece, best quality, absurdres, highres, very aesthetic, high quality, detailed, insanely detailed, beautiful, very awa, anime screencap,nsfw，Japanese anime fantasy illustration, pink-haired girl, wearing an ornate pink and white gradient kimono with golden embroidery and flowing ribbons, ethereal and alluring demeanor, soft dreamy color palette of pink, white, pale gold and lavender, set against a misty green mountain and cloud backgroung",
+      "text": "</posivite>",
       "clip": [
         "30",
         1
@@ -44,7 +44,7 @@
   },
   "6": {
     "inputs": {
-      "text": "lowres, bad quality, worst quality,bad anatomy, sketch, jpeg artifacts, ugly, poorly drawn,blurry,bad quality,worst quality,worst detail,sketch,censor,hat",
+      "text": "</nagitive>",
       "clip": [
         "30",
         1
@@ -73,8 +73,8 @@
   },
   "20": {
     "inputs": {
-      "width": 1000,
-      "height": 1000,
+      "width": "</width>",
+      "height": "</height>",
       "batch_size": 1
     },
     "class_type": "EmptyLatentImage",

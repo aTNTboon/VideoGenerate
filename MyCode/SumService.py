@@ -16,14 +16,25 @@ class SumService:
         self.TTS=TTSUtil
         self.SU=SubtitleUtil
         self.IGU=Image_Generate_Util
-        self.UID=0
+        self.Video_id=0
+        self.UID2Video_Id: dict[int, list[str]] = {}
     def run(self):
+        video_id=self.Video_id
         response= self.RU.request("")
-        json_list = self_parse(response,self.UID,0)
+        json_list = self_parse(response,video_id,0)
+        uid=0
+        self.UID2Video_Id[video_id]=[]
+        for item in json_list:
+            videoName=f"{video_id}_{uid}"
+            self.UID2Video_Id[video_id].append(str(videoName))
+            self.TTS.audio_request(videoName,item["text"])
+            self.SU.generate_src(videoName)
+            
+            uid+=1
         
+        self.Video_id+=1
 
 
-        self.UID+=1
 
 if __name__ == '__main__':
     SumService(

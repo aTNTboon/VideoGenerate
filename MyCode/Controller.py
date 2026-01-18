@@ -1,4 +1,4 @@
-from MyCode.util.SceneParserService import SecenePaser
+from MyCode.util.SceneParser import SecenePaser
 import flask
 import json
 import os
