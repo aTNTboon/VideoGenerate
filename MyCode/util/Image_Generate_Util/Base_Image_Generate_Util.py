@@ -10,6 +10,6 @@ class Base_Image_Generate_Util:
             self.path=path
         pass
 
-    def getImage(self) -> str:
+    def getImage(self,uid,posivite_promp,nagitive_prompt):
         raise NotImplementedError
     

@@ -11,3 +11,10 @@ class Setting:
     ImagePath="/article/image/"
     height=720
     width=1080
+    style:dict[str,str]={
+        "1":"GuFeng",
+    }
+    src_language="Chinese"
+    role_name:str=""
+    word_timestamps=False
+    fp16=False

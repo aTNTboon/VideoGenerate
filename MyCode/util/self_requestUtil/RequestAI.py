@@ -1,14 +1,14 @@
 import json
 import requests
 from  MyCode.Setting import Setting
-from Base_Request import Base_Request
+from MyCode.util.self_requestUtil.Base_Request import Base_Request
 
 
 class RequestAI(Base_Request):
     def __init__(self) -> None:
         pass
     
-    def getResonce(self,message)->str:
+    def request(self, message)->str:
 
         headers = {
         "Authorization": f"{Setting.ApiKey}:{Setting.ApiSecret}",
@@ -40,6 +40,8 @@ class RequestAI(Base_Request):
             data=json.dumps(payload),
             stream=False
         )
+        full_response=""
+        isFirstContent=True
         for chunks in response.iter_lines():
             # 打印返回的每帧内容
             # print(chunks)
