@@ -8,7 +8,7 @@ class Base_Video_Generate_Util:
         self.BIGU=Base_Image_Generate_Util
         self.RU=RU
         pass
-    def generateFrame(self,videoName,content):
+    def generateFrame(self,videoName,content)->list[str]:
         text=""
         with open("/article/MyCode/prompt/picture_generate.txt","r") as f:
             text=f.read()
@@ -25,8 +25,8 @@ class Base_Video_Generate_Util:
         except Exception as e:
             nagitive_prompt= ""
             print(e)
-
-        self.BIGU.getImage(videoName,posivite_promp,nagitive_prompt)
+        
+        return self.BIGU.getImage(videoName,posivite_promp,nagitive_prompt)
 
 
 

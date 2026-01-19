@@ -15,3 +15,6 @@ class Setting:
         "1":"GuFeng",
     }
     src_language="Chinese"
+    music_dict:dict[str,str]={
+        "1":"/article/music/test.mp3",
+    }

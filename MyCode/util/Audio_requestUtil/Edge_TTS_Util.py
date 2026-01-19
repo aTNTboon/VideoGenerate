@@ -13,11 +13,12 @@ class Edge_TTS_Util(Base_Audio_Util):
         os.makedirs("/article/audio", exist_ok=True)
         # 调用 edge-tts
         communicate = edge_tts.Communicate(story, Setting.VOICE)
-        await communicate.save(f"/article/audio/{uid}.wav")
-
-    def audio_request(self, uid, story):
+        path:str=f"/article/audio/{uid}.wav"
+        await communicate.save(path)
+        return path
+    def audio_request(self, uid, story)->str:
         # 同步包装
-        asyncio.run(self._audio_request_async(uid, story))
+        return asyncio.run(self._audio_request_async(uid, story))
 
 
 if __name__ == "__main__":

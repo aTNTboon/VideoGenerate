@@ -5,10 +5,10 @@ import os
 import requests
 import json
 
-
+import random
 
 class Local_Image_WorkFlow(Base_Image_Generate_Util):
-    def getImage(self,uid:str,posivite_promp,nagitive_prompt):
+    def getImage(self,uid:str,posivite_promp,nagitive_prompt)->list[str]:
 
         client_id = uid
         workflow_file = self.path
@@ -25,7 +25,8 @@ class Local_Image_WorkFlow(Base_Image_Generate_Util):
         
         workflow= workflow.replace("</posivite>",posivite_promp) # 修正拼写
         workflow= workflow.replace("</nagitive>",nagitive_prompt)
-
+        seed= random.randint(0, 2**48 - 1)
+        workflow = workflow.replace("</seed>",str(seed))
         # ✅ 终极修复：将Python字典字符串转回字典
         workflow_json = json.loads(workflow)
         payload = {
@@ -36,9 +37,15 @@ class Local_Image_WorkFlow(Base_Image_Generate_Util):
         resp = requests.post(http_url, json=payload)
         prompt_id = resp.json()["prompt_id"]
         print("Prompt ID:", prompt_id)
-        return prompt_id
+        ids:list[str]=[]
+        ids.append(prompt_id)
+        return ids
 
 
 if __name__ == '__main__':
+
+
     local_image_workflow = Local_Image_WorkFlow("")
-    local_image_workflow.getImage("test","pussy,dick,sex,Woman on top,3p,Standing position,4-panel comic layout, quad split screen,clear facial features,eye contact with viewer,Profile full-body shot，uniform white stockings,  sweet lolita white hosiery,white stokings,masterpiece, best quality, absurdres, highres, very aesthetic, high quality, detailed, insanely detailed, beautiful, very awa, anime screencap,nsfw，Japanese anime fantasy illustration, pink-haired girl, wearing an ornate pink and white gradient kimono with golden embroidery and flowing ribbons, ethereal and alluring demeanor, soft dreamy color palette of pink, white, pale gold and lavender, set against a misty green mountain and cloud backgroung","")
+    local_image_workflow.getImage("test",
+    "pussy,dick,sex,realistic style，4-panel comic layout, quad split screen,clear facial features,eye contact with viewer,uniform white stockings,sweet lolita white hosiery,white stokings,masterpiece, best quality, absurdres, highres,beautiful, very awa,nsfw,green and white hair","")
+    

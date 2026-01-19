@@ -37,7 +37,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
         super().__init__()
         self.model = whisper.load_model(Setting.SUBTITLE_MODEL)
 
-    def generate_src(self, videoName: str, content: str):
+    def generate_src(self, videoName: str, content: str)->str:
         prefix = [
             '。', '！', '？', '；', '，', '——', '…', '“', '”', '‘', '’','”','“',
             '（', '）', '【', '】', '《', '》',' ','、',
@@ -61,17 +61,18 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
             condition_on_previous_text=False,
         )
         content_index=0
-        with open(f'/article/subtitle/{videoName}.srt', 'w') as w:
+        srt_path=f'/article/subtitle/{videoName}.srt'
+        with open(srt_path, 'w') as w:
             
             index=1
 
             segments = result["segments"]
             for segment in segments:
                 w.write(f"{index}\n")
-                start:np.float16 = segment["start"]
-                end:np.float16 = segment["end"]
+                start:np.float16 = segment["start"] # type: ignore
+                end:np.float16 = segment["end"] # type: ignore
                 w.write(f"{npfloat16_to_srt_time(start)} --> {npfloat16_to_srt_time(end)}\n")
-                text:str = segment["text"].strip()
+                text:str = segment["text"].strip() # type: ignore
                 text_chars = list(text)  # 转成列表
                 for i in range(len(text_chars)):
                     if text_chars[i] not in prefix:
@@ -84,6 +85,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
                 w.write("".join(text_chars))
                 w.write("\n\n")
                 index+=1
+        return srt_path
 
 if __name__ == '__main__':
     wu = Whisper_Sybtitle_Util()
@@ -91,3 +93,8 @@ if __name__ == '__main__':
         "test",
         "2022年的秋天，淅淅沥沥的小雨从灰色的天空落下，打湿了城市街道。胡同里，十七八岁的少年庆尘和一位老爷子坐在超市雨棚下对弈，雨棚之外一片灰暗，雨水把地面浸成浅黑色，雨棚下却留着一块干净的净土。棋盘上杀机毕露，少年平静地提醒老头“将军”，老头无奈认输。庆尘拿了20块钱，坐回棋盘旁复盘，两人之间形成了一种奇异的默契——庆尘教棋，老头输钱学棋"
     )
+
+
+
+    
+

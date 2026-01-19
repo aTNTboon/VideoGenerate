@@ -11,6 +11,9 @@ from MyCode.util.self_requestUtil.Base_Request import Base_Request
 from MyCode.util.SceneParser import self_parse
 from MyCode.util.Image_Generate_Util.Base_Video_Generate_Util import Base_Video_Generate_Util
 from enum import Enum
+import MyCode.util.Video_Edit_Util.VideoComposer as VideoComposer
+import MyCode.util.Image_Generate_Util.GetPathFromPrompt_ID as GetPathFromPrompt_ID
+from MyCode.util.Music_Chioce_Util.Music_Util import Music_Util
 
 
 class StylizedModel(Enum):
@@ -19,29 +22,49 @@ class StylizedModel(Enum):
 
 
 class SumService(BaseService):
-    def __init__(self,requestUtil:Base_Request,TTSUtil:Base_Audio_Util,SubtitleUtil:Base_Subtitle_Util):
+    def __init__(self,requestUtil:Base_Request,TTSUtil:Base_Audio_Util,SubtitleUtil:Base_Subtitle_Util,music_util:Music_Util):
         self.RU=requestUtil
         self.TTS=TTSUtil
         self.SU=SubtitleUtil
         self.Video_id=0
+        self.MU=music_util
         self.UID2Video_Id: dict[int, list[str]] = {}
-    def run(self):
+    def run(self,content):
         video_id=self.Video_id
-        response= self.RU.request("")
+        response= self.RU.request(content)
         json_list = self_parse(response,video_id,0)
         uid=0
         self.UID2Video_Id[video_id]=[]
+        videoPath=f"/article/video/{video_id}.mp4"
+        music_path:str=""
         for item in json_list:
+            #背景音乐
+            mood:str=item["mood"]
+            self.MU.generate_music(mood)
+            # 生成视频名称
             videoName=f"{video_id}_{uid}"
             self.UID2Video_Id[video_id].append(str(videoName))
-            self.TTS.audio_request(videoName,item["text"])
-            self.SU.generate_src(videoName,item["text"])
+            #生成配音
+            audio_path= self.TTS.audio_request(videoName,item["text"])
+            # 生成字幕
+            srt_path= self.SU.generate_src(videoName,item["text"])
+            #生成视频
             base: Base_Image_Generate_Util = StylizedModel[Setting.style[str(item['theme_id'])]].value
             video_Generator:Base_Video_Generate_Util = Base_Video_Generate_Util(base,self.RU)
-            video_Generator.generateFrame(videoName,item["text"])
+            prompt_ids:list[str] = video_Generator.generateFrame(videoName,item["text"])
+            GetPathFromPrompt_ID.wait_queue_empty()
+            paths:list[str]=[]
+            for prompt_id in prompt_ids:
+                path = GetPathFromPrompt_ID.get_path_from_Prompt_id(prompt_id)
+                paths.append(path)
+            #剪辑
+            os.makedirs("/article/video", exist_ok=True)
+            VideoComposer.images_to_video(paths,audio_path,videoPath)
+            VideoComposer.add_subtitles(videoPath,srt_path,videoPath)
+            VideoComposer.add_audio_to_video(videoPath,audio_path,videoPath,0.5)
             uid+=1
-        self.Video_id+=1
 
+        self.Video_id+=1
 
 
 if __name__ == '__main__':

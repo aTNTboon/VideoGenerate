@@ -84,7 +84,7 @@ def add_subtitles( video_path: str, srt_path: str, output_path: str):
             final = final.set_audio(video.audio)
 
         final.write_videofile(output_path, codec="libx264", audio_codec="aac", fps=video.fps)
-
+        
 
 
 if __name__ == '__main__':
