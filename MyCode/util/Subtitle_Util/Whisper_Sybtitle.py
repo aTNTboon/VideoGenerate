@@ -1,3 +1,5 @@
+import gc
+import torch
 import whisper
 import re
 from whisper.utils import get_writer
@@ -38,6 +40,8 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
         self.model = whisper.load_model(Setting.SUBTITLE_MODEL)
 
     def generate_src(self, videoName: str, content: str)->str:
+
+
         prefix = [
             '。', '！', '？', '；', '，', '——', '…', '“', '”', '‘', '’','”','“',
             '（', '）', '【', '】', '《', '》',' ','、',
@@ -62,6 +66,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
         )
         content_index=0
         srt_path=f'/article/subtitle/{videoName}.srt'
+        
         with open(srt_path, 'w') as w:
             
             index=1
@@ -85,6 +90,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
                 w.write("".join(text_chars))
                 w.write("\n\n")
                 index+=1
+                        # 1. 删除Whisper模型的引用（核心：只清理self.model）
         return srt_path
 
 if __name__ == '__main__':

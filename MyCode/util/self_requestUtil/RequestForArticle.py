@@ -4,7 +4,7 @@ from  MyCode.Setting import Setting
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
 
 
-class RequestAI(Base_Request):
+class RequestForArticle(Base_Request):
     def __init__(self) -> None:
         pass
     
@@ -14,13 +14,17 @@ class RequestAI(Base_Request):
         "Authorization": f"{Setting.ApiKey}:{Setting.ApiSecret}",
         "content-type": "application/json"
     }
+        txt=""
+        with open('/article/MyCode/prompt/article_text_generate.txt') as f:
+            txt=f.read()
+        txt+=message
         payload = {
         "model": "x1",
         "user": "user_id",
         "messages": [
             {
                 "role": "user",
-                "content": f"{message}"
+                "content": f"{txt}"
             }
         ],
         "stream": True,
@@ -56,6 +60,5 @@ class RequestAI(Base_Request):
                     if (True == isFirstContent):
                         isFirstContent = False
                     full_response += content
-                    print(full_response)
         return full_response
     

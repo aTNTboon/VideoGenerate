@@ -1,5 +1,6 @@
 import ast
 from MyCode.Setting import Setting
+from MyCode.util.Image_Generate_Util import GetPathFromPrompt_ID
 from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_Generate_Util
 import os
 import requests
@@ -8,9 +9,9 @@ import json
 import random
 
 class Local_Image_WorkFlow(Base_Image_Generate_Util):
-    def getImage(self,uid:str,posivite_promp,nagitive_prompt)->list[str]:
+    def getImage(self,posivite_promp,nagitive_prompt)->list[str]:
 
-        client_id = uid
+
         workflow_file = self.path
         http_url = f"{Setting.CompyPromptUrl}/prompt"
         print("self.path",self.path)
@@ -39,7 +40,11 @@ class Local_Image_WorkFlow(Base_Image_Generate_Util):
         print("Prompt ID:", prompt_id)
         ids:list[str]=[]
         ids.append(prompt_id)
-        return ids
+        paths:list[str]=[]
+        for prompt_id in ids:
+            path = GetPathFromPrompt_ID.get_path_from_Prompt_id(prompt_id)
+            paths.append(path)
+        return paths
 
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@ def self_parse(text,uid,theme_id):
                 "uid": uid,
                 "theme_id": theme_id,
                 "mood": int(mood),
-                "scene": scene_text.strip()  # 去掉首尾空格
+                "scene": scene_text.strip()
             })
         return json_list
 

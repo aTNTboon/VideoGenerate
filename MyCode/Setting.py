@@ -12,7 +12,7 @@ class Setting:
     height=720
     width=1080
     style:dict[str,str]={
-        "1":"GuFeng",
+        "0":"GuFeng",
     }
     src_language="Chinese"
     music_dict:dict[str,str]={

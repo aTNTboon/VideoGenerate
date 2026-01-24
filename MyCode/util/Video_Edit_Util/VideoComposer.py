@@ -45,7 +45,7 @@ def add_audio_to_video(video_path: str, new_audio_path: str, output_path: str, n
         video = VideoFileClip(video_path)
         duration = video.duration
         new_audio:AudioFileClip = AudioFileClip(new_audio_path).fx(volumex, new_audio_volume)
-        new_audio.subclip(0, duration)
+        new_audio= new_audio.subclip(0, duration)
         new_audio = new_audio.fx(audio_fadein, 2.0)
         new_audio = new_audio.fx(audio_fadeout, 2.0)
         if video.audio:
@@ -67,14 +67,17 @@ def add_subtitles( video_path: str, srt_path: str, output_path: str):
         generator = lambda txt: TextClip(
             txt,
             font=font_path,
-            fontsize=36,
+            fontsize=25,
             color='white',
             stroke_color='black',
-            stroke_width=2,
+            stroke_width=1,
             method='caption',
-            size=(1280, 100),  # 宽度优先，高度自动换行
+            size=(1280, 200),  # 宽度优先，高度自动换行
             align='center'      # 水平对齐
             )
+        with open(srt_path,'r',encoding='utf-8')as f:
+             txt=f.read()
+             print(txt)
 
         subs:mp_sub.SubtitlesClip = mp_sub.SubtitlesClip(srt_path, generator)
 
