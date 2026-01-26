@@ -1,4 +1,5 @@
 import ast
+import uuid
 from MyCode.Setting import Setting
 from MyCode.util.Image_Generate_Util import GetPathFromPrompt_ID
 from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_Generate_Util
@@ -15,7 +16,7 @@ class Local_Image_WorkFlow(Base_Image_Generate_Util):
         workflow_file = self.path
         http_url = f"{Setting.CompyPromptUrl}/prompt"
         print("self.path",self.path)
-
+        client_id=uuid.uuid4().hex
         # --- 生成 client_id ---
         # --- 读取 workflow ---
         with open(workflow_file, "r", encoding="utf-8") as f:

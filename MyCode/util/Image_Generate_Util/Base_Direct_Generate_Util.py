@@ -20,16 +20,18 @@ class Base_Direct_Generate_Util(Base_Video_Util):
             end:int=response.find("|")
             promps:list[str]=[]
             while end!=-1:
+                if end>=len(response):
+                    break
                 posivite_promp= response[start:end]
-                response=response[end:]
+                response=response[end+1:]
                 start=0
+                end=int(response.find("|"))
                 promps.append(posivite_promp)
+                
             paths:list[str] = generate_images_from_diffusers(prompts=promps)
             return paths
         except Exception as e:
-            raise Exception("产图问题")
-
-
+            raise Exception("产图问题",e)
 
 
 

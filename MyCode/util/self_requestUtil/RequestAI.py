@@ -56,6 +56,6 @@ class RequestAI(Base_Request):
                     if (True == isFirstContent):
                         isFirstContent = False
                     full_response += content
-                    print(full_response)
+        print(full_response)
         return full_response
     

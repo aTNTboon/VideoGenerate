@@ -23,7 +23,7 @@ import time
 import datetime
 from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
 import pymysql
-
+from typing import Type
 # ==== 数据库连接配置 ====
 HOST = "localhost"
 PORT = 3306
@@ -75,21 +75,15 @@ class StylizedModel(Enum):
 #             uid+=1
 def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
     db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
-
     video_id = int(time.time())
     response = requestUtil.request(content)
     json_list = self_parse(response, video_id, 0)
 
-    UID2Video_Id: dict[int, list[str]] = {}
-    UID2Video_Id[video_id] = []
-
     os.makedirs("/article/video/temp/", exist_ok=True)
-
     uid = 0
     for item in json_list:
         mood: str = item["mood"]
         videoName = f"{video_id}_{uid}"
-        UID2Video_Id[video_id].append(videoName)
         audio_path = TTSUtil.audio_request(videoName, item["scene"])
         srt_path = SubtitleUtil.generate_src(videoName, item["scene"])
         theme = str(item["theme_id"])
@@ -105,9 +99,9 @@ def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
         })
         uid += 1
 
-    return UID2Video_Id
 
-def getImage():
+
+def getImage(ba: Type[Base_Video_Util]):
     db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
 
     # 1️⃣ 查询所有 step=1 的记录
@@ -119,11 +113,11 @@ def getImage():
         uid = video["uid"]
         scene = video["scene"]
         theme=video["theme"]
-        videoName = f"{video_id}_{uid}"
-        base: Base_Image_Generate_Util = StylizedModel[str(theme)].value
-        video_generate:Base_Video_Util=  Base_Direct_Generate_Util(base,RU=RequestAI())
-        paths: list[str] = video_generate.generateFrame(scene)
 
+        theme="GuFeng"
+        base: Base_Image_Generate_Util = StylizedModel[str(theme)].value
+        video_generate:Base_Video_Util=  ba(base,RU=RequestAI())
+        paths: list[str] = video_generate.generateFrame(scene)
         # 4️⃣ 将帧路径或主要信息写回数据库
         # 假设我们存 video_path 作为生成帧的临时路径
         # 或者你可以单独存 paths 的 JSON
@@ -183,8 +177,10 @@ def getVideo():
 
 if __name__ == '__main__':
 
-        SubtitleUtil=Whisper_Sybtitle_Util(),
-        TTSUtil=Edge_TTS_Util(),
-        requestUtil=RequestForArticle(),
-        music_util=Music_Util()
-    
+        # SubtitleUtil=Whisper_Sybtitle_Util(),
+        # TTSUtil=Edge_TTS_Util(),
+        # requestUtil=RequestForArticle(),
+        # music_util=Music_Util()
+        # getImage(Base_Direct_Generate_Util)
+        # run_sum_service("请帮我写一个关于未来科技的短视频脚本，包含三个场景，每个场景描述未来科技如何改变人们的生活。每个场景需要有明确的主题和情感基调。",RequestForArticle(),Edge_TTS_Util(),Whisper_Sybtitle_Util())
+        getImage(Base_Direct_Generate_Util)

@@ -10,8 +10,9 @@ class Base_Video_Util:
         self.RU=RU
         pass
     
-    def generateFrame(self,videoName,content)->list[str]:
         raise Exception("unimplement")
+    def generateFrame(self,content)->list[str]:
+        raise NotImplementedError
 
 
 

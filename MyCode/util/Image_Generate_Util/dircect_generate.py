@@ -1,6 +1,8 @@
 import torch
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import StableDiffusionInpaintPipeline
 import os
+from PIL import Image
+
 
 def generate_images_from_diffusers(
     prompts: list[str],
@@ -37,12 +39,13 @@ def generate_images_from_diffusers(
 
     for i, prompt in enumerate(prompts):
         print(f"Generating {i+1}/{len(prompts)}: {prompt}")
+        init_image = Image.new("RGB", (width, height), (255, 255, 255))
 
         # 如果没有 mask 或 init_image，就传 None
         image = pipe(
             prompt=prompt,
-            image=None,
-            mask_image=None,
+            image=init_image,
+            mask_image=init_image,
             height=height,
             width=width,
             num_inference_steps=steps,

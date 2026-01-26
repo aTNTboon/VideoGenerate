@@ -42,7 +42,8 @@ class RequestForArticle(Base_Request):
             url=Setting.ApiUrl,
             headers=headers,
             data=json.dumps(payload),
-            stream=False
+            stream=False,
+            timeout=20
         )
         full_response=""
         isFirstContent=True
