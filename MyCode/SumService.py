@@ -1,15 +1,19 @@
 
 import os
 from MyCode.sqlManager import VideoDBManager
+from MyCode.util.Audio_requestUtil.Edge_TTS_Util import Edge_TTS_Util
 from MyCode.util.Image_Generate_Util import dircect_generate
 from MyCode.util.Image_Generate_Util.Base_Direct_Generate_Util import Base_Direct_Generate_Util
 from MyCode.util.Image_Generate_Util.Base_Video_Util import Base_Video_Util
+from MyCode.util.Subtitle_Util.Whisper_Sybtitle import Whisper_Sybtitle_Util
 from MyCode.util.self_requestUtil.RequestAI import RequestAI
 from MyCode.util.SceneParser import self_parse
 import MyCode.util.Video_Edit_Util.VideoComposer as VideoComposer
 import time
 from typing import Type
 from typing import Dict
+
+from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
 # ==== 数据库连接配置 ====
 HOST = "localhost"
 PORT = 3306
@@ -68,6 +72,8 @@ def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
     for item in json_list:
         mood: str = item["mood"]
         videoName = f"{video_id}_{uid}"
+        if item['scene']=="":
+            continue
         audio_path = TTSUtil.audio_request(videoName, item["scene"])
         srt_path = SubtitleUtil.generate_src(videoName, item["scene"])
         theme = str(item["theme_id"])
@@ -88,6 +94,8 @@ def getprompt(ba: Type[Base_Video_Util]):
     for video in step1_videos:
         id=video['id']
         scene = video["scene"]
+        if scene =="":
+            continue
         video_generate:Base_Video_Util=  ba(RU=RequestAI())
         prmts: list[str] = video_generate.generateFrame(scene)
         db.update_field(id=id,field="prompts" ,value="|".join(prmts))
@@ -135,6 +143,7 @@ def getVideo():
     for video_id, videos in video_dict.items():
         for video in videos:
             uid = video["uid"]
+            id = video["id"]
             # 从数据库获取必要路径
             paths:list[str] = video["video_path"].split(",")      # 帧列表
             audio_path = video["audio_path"]           # 配音路径
@@ -156,14 +165,9 @@ def getVideo():
                 VideoComposer.add_audio_to_video(temp_sub_video_path, music_path, final_output_path, 0.5)
                 os.remove(temp_sub_video_path)
 
-            # 5️⃣ 更新数据库 step=3，并写入 output_path
-            db.upsert_video_field(video_id=video_id, uid=uid, field="step", value=4)
-            db.upsert_video_field(video_id=video_id, uid=uid, field="output_path", value=final_output_path)
-
-            print(f"Video {video_id} uid={uid} processed, step updated to 4, output_path set.")
-    
+            db.update_field(id,"output_path",final_output_path)
+            db.update_step(id, 4)
     db.close()
-
 
 if __name__ == '__main__':
         
@@ -171,9 +175,10 @@ if __name__ == '__main__':
         # SubtitleUtil=Whisper_Sybtitle_Util(),
         # TTSUtil=Edge_TTS_Util(),
         # requestUtil=RequestForArticle(),
-        # music_util=Music_Util()
-        # getImage(Base_Direct_Generate_Util)
-        # run_sum_service("请帮我写一个关于未来科技的短视频脚本，包含三个场景，每个场景描述未来科技如何改变人们的生活。每个场景需要有明确的主题和情感基调。",RequestForArticle(),Edge_TTS_Util(),Whisper_Sybtitle_Util())
+
+        # with open("/article/MyCode/prompt/article_text_generate.txt") as f:
+        #     txt= f.read()
+        # run_sum_service("",RequestForArticle(),Edge_TTS_Util(),Whisper_Sybtitle_Util())
         # getprompt(Base_Direct_Generate_Util)
         # getImage()
         getVideo()

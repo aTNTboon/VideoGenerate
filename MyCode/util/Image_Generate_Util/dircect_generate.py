@@ -13,9 +13,9 @@ import gc
 def generate_anime_images(
     prompts: Dict[int, list[str]],
     output_dir: str = "./sd_outputs",
-    width: int = 512,
-    height: int = 512,
-    steps: int = 30,
+    width: int = 720,
+    height: int = 480,
+    steps: int = 20,
     guidance_scale: float = 7.5,
 ):
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,8 +27,9 @@ def generate_anime_images(
         low_cpu_mem_usage=True  # 只在加载阶段就优化内存
     )
     # .to(device)
-
-
+    extra=""
+    with open("/article/MyCode/prompt/role.txt") as f:
+        extra= f.read()
     # 优化显存
     # if hasattr(pipe, "enable_model_cpu_offload"):
     #     pipe.enable_model_cpu_offload()  # 非必要权重放到 CPU
@@ -43,7 +44,7 @@ def generate_anime_images(
         for i, prompt in enumerate(prompts_list):
             print(f"Generating {i+1}/{len(prompts_list)}: {prompt}")
             image = pipe(
-                prompt=prompt,
+                prompt=prompt+","+extra,
                 negative_prompt="low quality, blurry, bad anatomy,nsfw",
                 num_inference_steps=steps,
                 guidance_scale=guidance_scale,
@@ -63,7 +64,7 @@ def generate_anime_images(
 
 if __name__ == "__main__":
     prompt_list = [
-        "anime style, handsome male student, cherry blossom campus, cinematic lighting, vibrant colors, soft glow, dreamy atmosphere"
+        "masterpiece,best quality,high qualit,ultra-detailed,8k,sharp focus,cinematic lighting,beautiful face,handsome,expressive eyes"
     ]
     map={}
     map["test"]=prompt_list

@@ -91,7 +91,7 @@ def add_subtitles( video_path: str, srt_path: str, output_path: str):
             stroke_color='black',
             stroke_width=1,
             method='caption',
-            size=(480, 100),  # 宽度优先，高度自动换行
+            size=(480, 300),  # 宽度优先，高度自动换行
             align='center'      # 水平对齐
             )
         with open(srt_path,'r',encoding='utf-8')as f:
@@ -114,6 +114,6 @@ if __name__ == '__main__':
         path=os.path.join("/article/MyCode/movie", "output.mp4")
         # images_to_video(["/article/MyCode/image/ComfyUI_00002_.png", "/article/MyCode/image/ComfyUI_00265_.png"], "/article/audio/test.wav", path,1.0)
         # add_audio_to_video(path,"/article/music/test.mp3", path,0.2)
-        add_subtitles(path,"/article/subtitle/test.srt",     os.path.join("/article/MyCode/movie", "output11.mp4"))
+        add_subtitles(path,"/article/subtitle/test.srt", os.path.join("/article/MyCode/movie", "output11.mp4"))
     except Exception as e:
         print(e)

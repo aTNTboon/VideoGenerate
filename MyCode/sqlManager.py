@@ -15,14 +15,12 @@ class VideoDBManager:
 
     # 插入视频片段信息
     def insert_video(self, data: Dict):
-        sql = """
-        INSERT INTO videos 
-        (video_id, uid, theme, scene, src_path, audio_path, mood, music_path, video_path, output_path, step)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        sql = """INSERT INTO videos 
+        (video_id, uid, theme, scene, src_path, audio_path, mood, music_path, video_path, output_path, step,prompts)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """
         with self.conn.cursor() as cursor:
-            cursor.execute(sql, (
-                data.get("video_id"),
+            cursor.execute(sql, (data.get("video_id"),
                 data.get("uid"),
                 int(data.get("theme", 0)),
                 data.get("scene"),
@@ -68,7 +66,7 @@ class VideoDBManager:
             result = cursor.fetchall()
             return list(result)
 
-    def upsert_video_field(self, video_id: int, uid: int, field: str, value):
+    def upsert_video_field(self, id: int, uid: int, field: str, value):
         """
         如果记录存在就更新字段，否则插入一条新记录。
         
@@ -83,12 +81,12 @@ class VideoDBManager:
             raise ValueError(f"字段 {field} 不允许更新")
 
         sql = f"""
-        INSERT INTO videos (video_id, uid, {field})
+        INSERT INTO videos (id, uid, {field})
         VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE {field} = VALUES({field})
         """
         with self.conn.cursor() as cursor:
-            cursor.execute(sql, (video_id, uid, value))
+            cursor.execute(sql, (id, uid, value))
         self.conn.commit()
 
     def close(self):
