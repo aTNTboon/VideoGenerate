@@ -1,6 +1,6 @@
 import pymysql
 from typing import List, Dict
-
+from pymysql.cursors import DictCursor
 class VideoDBManager:
     def __init__(self, host="localhost", user="algernon", password="123", db="video_db", port=3306):
         self.conn = pymysql.connect(
@@ -32,7 +32,8 @@ class VideoDBManager:
                 data.get("music_path", ""),
                 data.get("video_path", ""),
                 data.get("output_path", ""),
-                data.get("step", 0)
+                data.get("step", 0),
+                data.get("prompts", "")
             ))
         self.conn.commit()
 
@@ -50,7 +51,7 @@ class VideoDBManager:
             cursor.execute(sql, (output_path, id))
         self.conn.commit()
     def update_field(self, id: int, field: str, value):
-        if field not in {"step", "output_path", "video_path", "audio_path", "src_path", "mood", "theme"}:
+        if field not in {"step", "output_path", "video_path", "audio_path", "src_path", "mood", "theme","prompts"}:
             raise ValueError(f"更新字段 {field} 不在允许列表内")
         
         sql = f"UPDATE videos SET {field}=%s WHERE id=%s"
@@ -60,12 +61,12 @@ class VideoDBManager:
 
 
     # 查询未完成的视频（step < 3）
-    def get_pending_videos(self,step) -> List[Dict]:
-        sql = "SELECT * FROM videos WHERE step=step"
-        with self.conn.cursor() as cursor:
-            cursor.execute(sql)
-            result =cursor.fetchall()
-            return list(result)  
+    def get_pending_videos(self, step: int) -> List[Dict]:
+        sql = "SELECT * FROM videos WHERE step = %s"
+        with self.conn.cursor(DictCursor) as cursor:  # dictionary=True 返回字典
+            cursor.execute(sql, (step,))
+            result = cursor.fetchall()
+            return list(result)
 
     def upsert_video_field(self, video_id: int, uid: int, field: str, value):
         """
@@ -77,7 +78,7 @@ class VideoDBManager:
         :param value: 字段值
         """
         # 允许更新的字段列表，避免注入
-        allowed_fields = {"step", "output_path", "video_path", "audio_path", "src_path", "mood", "theme", "music_path"}
+        allowed_fields = {"step", "output_path", "video_path", "audio_path", "src_path", "mood", "theme", "music_path","prompts"}
         if field not in allowed_fields:
             raise ValueError(f"字段 {field} 不允许更新")
 

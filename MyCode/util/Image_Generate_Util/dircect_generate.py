@@ -1,81 +1,79 @@
-import torch
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import StableDiffusionInpaintPipeline
 import os
-from PIL import Image
+from typing import Dict
+import torch
+from diffusers import StableDiffusionXLPipeline
+# import os
+import gc
+
+# os.environ["HTTP_PROXY"] = "http://172.23.0.1:7897"
+# os.environ["HTTPS_PROXY"] = "http://172.23.0.1:7897"
+# os.environ["ALL_PROXY"] = "socks5://172.23.0.1:7897"  # 如果是 socks5
 
 
-def generate_images_from_diffusers(
-    prompts: list[str],
+def generate_anime_images(
+    prompts: Dict[int, list[str]],
     output_dir: str = "./sd_outputs",
     width: int = 512,
     height: int = 512,
     steps: int = 30,
     guidance_scale: float = 7.5,
-    seed: int | None = None,
-    nsfw_filter: bool = True,
-    device: str = "cuda"
 ):
-    os.makedirs(output_dir, exist_ok=True)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        "/article/waiIllustriousSDXL_diffusers",
+        torch_dtype=torch.float16,
+        local_files_only=True,
+        device_map="balanced",
+        low_cpu_mem_usage=True  # 只在加载阶段就优化内存
+    )
+    # .to(device)
 
-    generator = None
-    if seed is not None:
-        generator = torch.Generator(device=device).manual_seed(seed)
 
-    print("Loading diffusers model from Hugging Face...")
-    pipe = StableDiffusionInpaintPipeline.from_pretrained(
-        "runwayml/stable-diffusion-inpainting",
-        torch_dtype=torch.float16
-    ).to(device)
+    # 优化显存
+    # if hasattr(pipe, "enable_model_cpu_offload"):
+    #     pipe.enable_model_cpu_offload()  # 非必要权重放到 CPU
+    if hasattr(pipe, "enable_xformers_memory_efficient_attention"):
+        pipe.enable_xformers_memory_efficient_attention()  # 更高效注意力
+    results :Dict[int, list[str]]= {}
+    for video_id in prompts.keys():
+        prompts_list:list[str] = prompts[video_id]
+        dirs=os.path.join(output_dir, str(video_id))
+        os.makedirs(dirs, exist_ok=True)
+        results[video_id]=[]
+        for i, prompt in enumerate(prompts_list):
+            print(f"Generating {i+1}/{len(prompts_list)}: {prompt}")
+            image = pipe(
+                prompt=prompt,
+                negative_prompt="low quality, blurry, bad anatomy,nsfw",
+                num_inference_steps=steps,
+                guidance_scale=guidance_scale,
+                width=width,
+                height=height,
+                ).images[0]
+                
+            save_path = os.path.join(dirs, f"anime_{i}.png")
+            image.save(save_path)
+            results[video_id].append(save_path)
 
-    # 优化
-    pipe.enable_attention_slicing()
-    pipe.enable_vae_slicing()
-
-    # NSFW 检测
-    if not nsfw_filter:
-        pipe.safety_checker = None
-
-    results = []
-
-    for i, prompt in enumerate(prompts):
-        print(f"Generating {i+1}/{len(prompts)}: {prompt}")
-        init_image = Image.new("RGB", (width, height), (255, 255, 255))
-
-        # 如果没有 mask 或 init_image，就传 None
-        image = pipe(
-            prompt=prompt,
-            image=init_image,
-            mask_image=init_image,
-            height=height,
-            width=width,
-            num_inference_steps=steps,
-            guidance_scale=guidance_scale,
-            generator=generator
-        ).images[0]
-
-        save_path = os.path.join(output_dir, f"image_{i}.png")
-        image.save(save_path)
-        results.append(save_path)
-
+            del image
+            torch.cuda.empty_cache()
     return results
+
 
 
 if __name__ == "__main__":
     prompt_list = [
-        "a cinematic cyberpunk city at night",
-        "a cute anime girl, pastel colors, soft lighting",
-        "a realistic astronaut floating in space"
+        "anime style, handsome male student, cherry blossom campus, cinematic lighting, vibrant colors, soft glow, dreamy atmosphere"
     ]
-
-    paths = generate_images_from_diffusers(
-        prompts=prompt_list,
+    map={}
+    map["test"]=prompt_list
+    paths = generate_anime_images(
+        prompts=map,
         output_dir="./sd_outputs",
-        width=768,
-        height=768,
-        steps=40,
-        guidance_scale=8.0,
-        seed=42,
-        nsfw_filter=True
+        width=720,
+        height=480,
+        steps=20,
+        guidance_scale=7.5,
     )
 
     print("Saved images:", paths)

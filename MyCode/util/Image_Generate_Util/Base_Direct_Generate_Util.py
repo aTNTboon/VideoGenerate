@@ -1,14 +1,11 @@
-from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_Generate_Util
 from MyCode.util.Image_Generate_Util.Base_Video_Util import Base_Video_Util
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
-from MyCode.util.Image_Generate_Util.dircect_generate import generate_images_from_diffusers
 class Base_Direct_Generate_Util(Base_Video_Util):
-    def __init__(self,Base_Image_Generate_Util:Base_Image_Generate_Util,RU:Base_Request):
-        self.BIGU=Base_Image_Generate_Util
+    def __init__(self,RU:Base_Request):
         self.RU=RU
         pass
     
-    def generateFrame(self,content)->list[str]:
+    def generateFrame(self,content):
         text=""
         with open("/article/MyCode/prompt/picture_generate.txt","r") as f:
             text=f.read()
@@ -27,9 +24,7 @@ class Base_Direct_Generate_Util(Base_Video_Util):
                 start=0
                 end=int(response.find("|"))
                 promps.append(posivite_promp)
-                
-            paths:list[str] = generate_images_from_diffusers(prompts=promps)
-            return paths
+            return promps
         except Exception as e:
             raise Exception("产图问题",e)
 

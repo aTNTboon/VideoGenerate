@@ -5,8 +5,7 @@ from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
 
 class Base_Video_Util:
-    def __init__(self,Base_Image_Generate_Util:Base_Image_Generate_Util,RU:Base_Request):
-        self.BIGU=Base_Image_Generate_Util
+    def __init__(self,RU:Base_Request):
         self.RU=RU
         pass
     

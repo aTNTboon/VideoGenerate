@@ -1,29 +1,15 @@
-from datetime import date
+
 import os
-from MyCode.Setting import Setting
-from MyCode.BaseService import BaseService
 from MyCode.sqlManager import VideoDBManager
-from MyCode.util.Audio_requestUtil.Edge_TTS_Util import Edge_TTS_Util
-from MyCode.util.Audio_requestUtil.Base_Audio_Util import Base_Audio_Util
+from MyCode.util.Image_Generate_Util import dircect_generate
 from MyCode.util.Image_Generate_Util.Base_Direct_Generate_Util import Base_Direct_Generate_Util
-from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_Generate_Util
 from MyCode.util.Image_Generate_Util.Base_Video_Util import Base_Video_Util
-from MyCode.util.Image_Generate_Util.Local_Image_WorkFlow import Local_Image_WorkFlow
-from MyCode.util.Subtitle_Util.Whisper_Sybtitle import Whisper_Sybtitle_Util
-from MyCode.util.Subtitle_Util.Base_Subtitle_Util import Base_Subtitle_Util
 from MyCode.util.self_requestUtil.RequestAI import RequestAI
-from MyCode.util.self_requestUtil.Base_Request import Base_Request
 from MyCode.util.SceneParser import self_parse
-from MyCode.util.Image_Generate_Util.Base_CompyUI_Generate_Util import Base_Compy_UI_Util
-from enum import Enum
 import MyCode.util.Video_Edit_Util.VideoComposer as VideoComposer
-import MyCode.util.Image_Generate_Util.GetPathFromPrompt_ID as GetPathFromPrompt_ID
-from MyCode.util.Music_Chioce_Util.Music_Util import Music_Util
 import time
-import datetime
-from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
-import pymysql
 from typing import Type
+from typing import Dict
 # ==== 数据库连接配置 ====
 HOST = "localhost"
 PORT = 3306
@@ -31,9 +17,7 @@ USER = "algernon"
 PASSWORD = "123"
 DB = "testdb"
 
-class StylizedModel(Enum):
     # 枚举成员：格式 成员名 = 值，值可以是 数字/字符串/对象 等任意类型
-    GuFeng =  Local_Image_WorkFlow("")
 
 # class SumService(BaseService):
 #     def __init__(self,requestUtil:Base_Request,TTSUtil:Base_Audio_Util,SubtitleUtil:Base_Subtitle_Util,music_util:Music_Util):
@@ -98,34 +82,36 @@ def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
             "step": 1
         })
         uid += 1
+def getprompt(ba: Type[Base_Video_Util]):
+    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
+    step1_videos = db.get_pending_videos(step=1)
+    for video in step1_videos:
+        id=video['id']
+        scene = video["scene"]
+        video_generate:Base_Video_Util=  ba(RU=RequestAI())
+        prmts: list[str] = video_generate.generateFrame(scene)
+        db.update_field(id=id,field="prompts" ,value="|".join(prmts))
+        db.update_step(id, 2)
 
 
-
-def getImage(ba: Type[Base_Video_Util]):
+def getImage():
     db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
 
     # 1️⃣ 查询所有 step=1 的记录
-    step1_videos = db.get_pending_videos(step=1)
-
+    step1_videos = db.get_pending_videos(step=2)
+    video_map: Dict[int, list[str]] = {}
     for video in step1_videos:
-        id=video['id']
-        video_id = video["video_id"]
-        uid = video["uid"]
-        scene = video["scene"]
-        theme=video["theme"]
-
-        theme="GuFeng"
-        base: Base_Image_Generate_Util = StylizedModel[str(theme)].value
-        video_generate:Base_Video_Util=  ba(base,RU=RequestAI())
-        paths: list[str] = video_generate.generateFrame(scene)
-        # 4️⃣ 将帧路径或主要信息写回数据库
-        # 假设我们存 video_path 作为生成帧的临时路径
-        # 或者你可以单独存 paths 的 JSON
-        video_path = ",".join(paths)  # 简单存储为逗号分隔路径
+        video_id = video["id"]
+        promt=video["prompts"]
+        prompts:list[str]=promt.split("|")
+        video_map[video_id]=prompts
+    paths: Dict[int,list[str]] = dircect_generate.generate_anime_images(prompts=video_map)
+    for id in paths.keys():
+        video_path = ",".join(paths[id])  # 简单存储为逗号分隔路径
         db.update_field(id=id,field="video_path" ,value=video_path)
-        # 5️⃣ 更新 step=2
-        db.update_step(id, 2)
-        print(f"Video {video_id} uid={uid}: {len(paths)} frames generated, step updated to 2")
+            # 5️⃣ 更新 step=2
+        db.update_step(id, 3)
+        print(f"Video {id} frames generated, step updated to ")
 
 import os
 from collections import defaultdict
@@ -135,7 +121,7 @@ def getVideo():
     db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
 
     # 1️⃣ 查询所有 step=2 的记录
-    step2_videos = db.get_pending_videos(step=2)
+    step2_videos = db.get_pending_videos(step=3)
     
     # 2️⃣ 按 video_id 分组，并按 uid 排序
     video_dict = defaultdict(list)
@@ -153,29 +139,34 @@ def getVideo():
             paths:list[str] = video["video_path"].split(",")      # 帧列表
             audio_path = video["audio_path"]           # 配音路径
             srt_path = video["src_path"]               # 字幕路径
-            music_path = video.get("music_path", None) # 背景音乐，可选
+            music_path = video.get("/article/music/test.mp3", None) # 背景音乐，可选
 
             # 临时和最终视频路径
             temp_video_path = f"/article/video/temp/{video_id}_{uid}.mp4"
+            temp_sub_video_path = f"/article/video/sub/{video_id}_{uid}.mp4"
             final_output_path = f"/article/video/{video_id}_{uid}.mp4"
             os.makedirs("/article/video/temp", exist_ok=True)
             os.makedirs("/article/video", exist_ok=True)
+            os.makedirs("/article/video/sub", exist_ok=True)
             # 实际生成逻辑可替换为：
             VideoComposer.images_to_video(paths, audio_path, temp_video_path)
-            VideoComposer.add_subtitles(temp_video_path, srt_path, temp_video_path)
+            VideoComposer.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
+            os.remove(temp_video_path)
             if music_path:
-                VideoComposer.add_audio_to_video(temp_video_path, music_path, final_output_path, 0.5)
+                VideoComposer.add_audio_to_video(temp_sub_video_path, music_path, final_output_path, 0.5)
+                os.remove(temp_sub_video_path)
 
             # 5️⃣ 更新数据库 step=3，并写入 output_path
-            db.upsert_video_field(video_id=video_id, uid=uid, field="step", value=3)
+            db.upsert_video_field(video_id=video_id, uid=uid, field="step", value=4)
             db.upsert_video_field(video_id=video_id, uid=uid, field="output_path", value=final_output_path)
 
-            print(f"Video {video_id} uid={uid} processed, step updated to 3, output_path set.")
+            print(f"Video {video_id} uid={uid} processed, step updated to 4, output_path set.")
     
     db.close()
 
 
 if __name__ == '__main__':
+        
 
         # SubtitleUtil=Whisper_Sybtitle_Util(),
         # TTSUtil=Edge_TTS_Util(),
@@ -183,4 +174,6 @@ if __name__ == '__main__':
         # music_util=Music_Util()
         # getImage(Base_Direct_Generate_Util)
         # run_sum_service("请帮我写一个关于未来科技的短视频脚本，包含三个场景，每个场景描述未来科技如何改变人们的生活。每个场景需要有明确的主题和情感基调。",RequestForArticle(),Edge_TTS_Util(),Whisper_Sybtitle_Util())
-        getImage(Base_Direct_Generate_Util)
+        # getprompt(Base_Direct_Generate_Util)
+        # getImage()
+        getVideo()

@@ -3,7 +3,6 @@ from moviepy.editor import (
     VideoFileClip,
     AudioFileClip,
     ImageClip,
-    concatenate_videoclips,
     CompositeAudioClip,
     TextClip,
     CompositeVideoClip
@@ -16,24 +15,44 @@ import moviepy.video.tools.subtitles as mp_sub
 from typing import List
 
 
-    # ---------------- 功能 1 ----------------
 def images_to_video(images: List[str], audio_path: str, output_path: str, image_volume: float = 1.0):
-        """
-        images: 图片路径列表
-        audio_path: 背景音频路径
-        image_volume: 音频音量倍数
-        """
-        audio = AudioFileClip(audio_path).fx(volumex, image_volume)
-        duration = audio.duration
-        num_images = len(images)
-        img_duration = duration / max(num_images, 1)
+    """
+    images: 图片路径列表
+    audio_path: 背景音频路径
+    image_volume: 音频音量倍数
+    """
+    from moviepy.editor import ImageClip, AudioFileClip, CompositeVideoClip
+    from moviepy.audio.fx.volumex import volumex
+    from PIL import Image
 
-        clips = [ImageClip(img).set_duration(img_duration) for img in images]
-        video = concatenate_videoclips(clips, method="compose")
-        video = video.set_audio(audio)
-        video.write_videofile(output_path, codec="libx264", audio_codec="aac", fps=24)
-        for clip in clips:
-            clip.close()
+    audio = AudioFileClip(audio_path).fx(volumex, image_volume)
+    duration = audio.duration
+    num_images = len(images)
+    img_duration = duration / max(num_images, 1)
+
+    # 使用第一张图片尺寸作为视频大小，保证所有图片尺寸一致
+    first_img = Image.open(images[0])
+    video_size = first_img.size
+    first_img.close()
+
+    clips = []
+    for i, img in enumerate(images):
+        clip = (ImageClip(img)
+                .set_start(i * img_duration)
+                .set_duration(img_duration)
+                .set_position("center"))
+        clips.append(clip)
+
+    # 使用 CompositeVideoClip 保持顺序和 start 时间
+    video = CompositeVideoClip(clips, size=video_size)
+    video = video.set_audio(audio)
+    video.write_videofile(output_path, codec="libx264", audio_codec="aac", fps=24)
+
+    for clip in clips:
+        clip.close()
+    audio.close()
+    video.close()
+
 
     # ---------------- 功能 2 ----------------
 def add_audio_to_video(video_path: str, new_audio_path: str, output_path: str, new_audio_volume: float = 1.0):
@@ -72,7 +91,7 @@ def add_subtitles( video_path: str, srt_path: str, output_path: str):
             stroke_color='black',
             stroke_width=1,
             method='caption',
-            size=(1280, 200),  # 宽度优先，高度自动换行
+            size=(480, 100),  # 宽度优先，高度自动换行
             align='center'      # 水平对齐
             )
         with open(srt_path,'r',encoding='utf-8')as f:
