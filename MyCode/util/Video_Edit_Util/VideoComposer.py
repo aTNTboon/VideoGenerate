@@ -13,39 +13,51 @@ from moviepy.audio.fx.audio_fadeout import audio_fadeout
 from moviepy.audio.fx.volumex import volumex
 import moviepy.video.tools.subtitles as mp_sub
 from typing import List
+from moviepy.video.fx import resize as vfx_resize
+import random
+from moviepy.editor import ImageClip, AudioFileClip, CompositeVideoClip
+from moviepy.audio.fx.volumex import volumex
+from PIL import Image
 
-
-def images_to_video(images: List[str], audio_path: str, output_path: str, image_volume: float = 1.0):
-    """
-    images: 图片路径列表
-    audio_path: 背景音频路径
-    image_volume: 音频音量倍数
-    """
-    from moviepy.editor import ImageClip, AudioFileClip, CompositeVideoClip
-    from moviepy.audio.fx.volumex import volumex
-    from PIL import Image
-
+def images_to_video(images, audio_path, output_path, image_volume=1.0):
     audio = AudioFileClip(audio_path).fx(volumex, image_volume)
     duration = audio.duration
     num_images = len(images)
     img_duration = duration / max(num_images, 1)
 
-    # 使用第一张图片尺寸作为视频大小，保证所有图片尺寸一致
     first_img = Image.open(images[0])
     video_size = first_img.size
     first_img.close()
 
+    W, H = video_size
+    move_pixels = int(W * 0.05)   # 平移幅度（5%宽度）
+    zoom_factor = 1.10            # 放大 10% 防止黑边
+
     clips = []
+    if hasattr(Image, "Resampling"):
+        Image.ANTIALIAS = Image.Resampling.LANCZOS # type: ignore
+
     for i, img in enumerate(images):
-        clip = (ImageClip(img)
-                .set_start(i * img_duration)
-                .set_duration(img_duration)
-                .set_position("center"))
+        direction = random.choice([-1, 1])
+        start_x = direction * move_pixels
+        end_x = -start_x
+
+        def make_pos(t, sx=start_x, ex=end_x):
+            x = sx + (ex - sx) * (t / img_duration)
+            return ("center", x)
+        clip = (
+            ImageClip(img)
+            .fx(vfx_resize.resize,zoom_factor)
+            .set_start(i * img_duration)
+            .set_duration(img_duration)
+            .set_position(make_pos)
+        )
+
         clips.append(clip)
 
-    # 使用 CompositeVideoClip 保持顺序和 start 时间
     video = CompositeVideoClip(clips, size=video_size)
     video = video.set_audio(audio)
+
     video.write_videofile(output_path, codec="libx264", audio_codec="aac", fps=24)
 
     for clip in clips:

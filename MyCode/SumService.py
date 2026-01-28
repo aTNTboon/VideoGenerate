@@ -1,4 +1,5 @@
 
+import gc
 import os
 from MyCode.sqlManager import VideoDBManager
 from MyCode.util.Audio_requestUtil.Edge_TTS_Util import Edge_TTS_Util
@@ -61,8 +62,7 @@ DB = "testdb"
 #                 "step": 1
 #             })
 #             uid+=1
-def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
-    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
+def run_sum_service(db:VideoDBManager,content, requestUtil, TTSUtil, SubtitleUtil):
     video_id = int(time.time())
     response = requestUtil.request(content)
     json_list = self_parse(response, video_id, 0)
@@ -88,8 +88,7 @@ def run_sum_service(content, requestUtil, TTSUtil, SubtitleUtil):
             "step": 1
         })
         uid += 1
-def getprompt(ba: Type[Base_Video_Util]):
-    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
+def getprompt(db:VideoDBManager,ba: Type[Base_Video_Util]):
     step1_videos = db.get_pending_videos(step=1)
     for video in step1_videos:
         id=video['id']
@@ -100,11 +99,10 @@ def getprompt(ba: Type[Base_Video_Util]):
         prmts: list[str] = video_generate.generateFrame(scene)
         db.update_field(id=id,field="prompts" ,value="|".join(prmts))
         db.update_step(id, 2)
+    
 
 
-def getImage():
-    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
-
+def getImage(db:VideoDBManager):
     # 1️⃣ 查询所有 step=1 的记录
     step1_videos = db.get_pending_videos(step=2)
     video_map: Dict[int, list[str]] = {}
@@ -125,8 +123,7 @@ import os
 from collections import defaultdict
 import time
 
-def getVideo():
-    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
+def getVideo(db:VideoDBManager):
 
     # 1️⃣ 查询所有 step=2 的记录
     step2_videos = db.get_pending_videos(step=3)
@@ -170,15 +167,27 @@ def getVideo():
     db.close()
 
 if __name__ == '__main__':
-        
+        db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
 
-        # SubtitleUtil=Whisper_Sybtitle_Util(),
-        # TTSUtil=Edge_TTS_Util(),
-        # requestUtil=RequestForArticle(),
+        # SubtitleUtil:Whisper_Sybtitle_Util=Whisper_Sybtitle_Util()
+        # TTSUtil:Edge_TTS_Util=Edge_TTS_Util()
+        # requestUtil:RequestForArticle=RequestForArticle()
 
         # with open("/article/MyCode/prompt/article_text_generate.txt") as f:
         #     txt= f.read()
-        # run_sum_service("",RequestForArticle(),Edge_TTS_Util(),Whisper_Sybtitle_Util())
-        # getprompt(Base_Direct_Generate_Util)
-        # getImage()
-        getVideo()
+        # run_sum_service(db,"",requestUtil,TTSUtil,SubtitleUtil)
+        # if hasattr(SubtitleUtil, 'close'):
+        #     SubtitleUtil.close()
+        # if hasattr(TTSUtil, 'close'):
+        #     TTSUtil.close()
+        # if hasattr(requestUtil, 'close'):
+        #     requestUtil.close()
+        # del SubtitleUtil
+        # del TTSUtil
+        # del requestUtil
+        # gc.collect()
+        # getprompt(db,Base_Direct_Generate_Util)
+        # gc.collect()
+        # getImage(db)
+        # gc.collect()
+        getVideo(db)

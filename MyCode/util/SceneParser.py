@@ -1,6 +1,95 @@
 
 
 import re
+import re
+
+import re
+
+def num_and_math_to_chinese(s: str) -> str:
+    """
+    将数字、百分比、小数和数学符号转换为中文表达
+    支持：
+    - 整数、0~99999
+    - 小数
+    - 百分比
+    - 常用数学符号：+ - * / = < > <= >= != == 
+    """
+
+    digit_map = "零一二三四五六七八九"
+    unit_map = ["", "十", "百", "千", "万"]
+
+    def int_to_cn(n: int) -> str:
+        if n == 0:
+            return digit_map[0]
+        res = ""
+        str_n = str(n)
+        length = len(str_n)
+        zero_flag = False
+        for i, ch in enumerate(str_n):
+            num = int(ch)
+            pos = length - i - 1
+            if num == 0:
+                zero_flag = True
+            else:
+                if zero_flag:
+                    res += digit_map[0]
+                    zero_flag = False
+                res += digit_map[num] + unit_map[pos]
+        if res.startswith("一十"):
+            res = res[1:]
+        if res.endswith("零"):
+            res = res[:-1]
+        return res
+
+    s = s.strip()
+
+    # 先处理负数
+    negative = False
+    if s.startswith("-"):
+        negative = True
+        s = s[1:]
+
+    # 替换百分比
+    if s.endswith("%"):
+        s = s.rstrip("%")
+        return ("负" if negative else "") + "百分之" + num_and_math_to_chinese(s)
+
+    # 替换数学符号（先长符号，避免被短符号覆盖）
+    symbol_map = {
+        "<=": "小于等于",
+        ">=": "大于等于",
+        "!=": "不等于",
+        "==": "等于",
+        "<": "小于",
+        ">": "大于",
+        "+": "加",
+        "-": "杠",
+        "*": "乘",
+        "/": "除",
+        "=": "等于",
+    }
+
+    # 用正则安全替换
+    for sym, cn in sorted(symbol_map.items(), key=lambda x: -len(x[0])):  # 长的先替换
+        s = s.replace(sym, cn)
+
+    # 处理小数点
+    if "." in s:
+        parts = s.split(".")
+        integer_part = parts[0]
+        decimal_part = parts[1]
+        cn_integer = int_to_cn(int(integer_part)) if integer_part.isdigit() else integer_part
+        cn_decimal = "".join(digit_map[int(d)] for d in decimal_part if d.isdigit())
+        return ("负" if negative else "") + cn_integer + "点" + cn_decimal
+
+    # 处理整数
+    if s.isdigit():
+        n = int(s)
+        return ("负" if negative else "") + int_to_cn(n)
+
+    return ("负" if negative else "") + s
+
+
 
 def self_parse(text,uid,theme_id):
         text = text.strip()
@@ -16,8 +105,17 @@ def self_parse(text,uid,theme_id):
         if not scenes_txt:
             raise Exception('no scene')
         scenes = re.findall(r'<scene\s+mood="(\d+)">(.*?)</scene>', scenes_txt, re.DOTALL)
+        new_scenes = []
+        for mood, content in scenes:
+            mood_cn = num_and_math_to_chinese(mood)  # 将数字转换为中文
+            # 替换内容里的数字、百分比、小数点
+            def replace_number(match):
+                return num_and_math_to_chinese(match.group())
+            
+            content_cn = re.sub(r'\d+(\.\d+)?%?', replace_number, content)
+            new_scenes.append((mood_cn, content_cn))
         json_list = []
-        for mood, scene_text in scenes:
+        for mood, scene_text in new_scenes:
             json_list.append({
                 "uid": uid,
                 "theme_id": theme_id,

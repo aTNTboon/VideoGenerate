@@ -1,7 +1,7 @@
 import os
 from typing import Dict
 import torch
-from diffusers import StableDiffusionXLPipeline
+from diffusers import StableDiffusionXLPipeline,DPMSolverMultistepScheduler
 # import os
 import gc
 
@@ -16,9 +16,8 @@ def generate_anime_images(
     width: int = 720,
     height: int = 480,
     steps: int = 20,
-    guidance_scale: float = 7.5,
+    guidance_scale: float = 6.5,
 ):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
     pipe = StableDiffusionXLPipeline.from_pretrained(
         "/article/waiIllustriousSDXL_diffusers",
         torch_dtype=torch.float16,
@@ -26,6 +25,7 @@ def generate_anime_images(
         device_map="balanced",
         low_cpu_mem_usage=True  # 只在加载阶段就优化内存
     )
+    pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     # .to(device)
     extra=""
     with open("/article/MyCode/prompt/role.txt") as f:
@@ -45,7 +45,7 @@ def generate_anime_images(
             print(f"Generating {i+1}/{len(prompts_list)}: {prompt}")
             image = pipe(
                 prompt=prompt+","+extra,
-                negative_prompt="low quality, blurry, bad anatomy,nsfw",
+                negative_prompt="lowres, bad quality, worst quality,bad anatomy, sketch, jpeg artifacts, ugly, poorly drawn,blurry,bad quality,worst quality,worst detail,sketch,censor",
                 num_inference_steps=steps,
                 guidance_scale=guidance_scale,
                 width=width,
@@ -58,13 +58,16 @@ def generate_anime_images(
 
             del image
             torch.cuda.empty_cache()
+    del pipe        # 删除 Python 对象引用
+    torch.cuda.empty_cache()  # 清理 GPU 显存
+    gc.collect()              # 回收 Python 内存
     return results
 
 
 
 if __name__ == "__main__":
     prompt_list = [
-        "masterpiece,best quality,high qualit,ultra-detailed,8k,sharp focus,cinematic lighting,beautiful face,handsome,expressive eyes"
+        "Close-up of glowing system interface showing task, man’s reflection on screen"
     ]
     map={}
     map["test"]=prompt_list

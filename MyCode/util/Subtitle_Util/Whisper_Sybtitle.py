@@ -39,6 +39,16 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
         super().__init__()
         self.model = whisper.load_model(Setting.SUBTITLE_MODEL)
 
+    def close(self):
+        # 释放模型引用
+        if hasattr(self, 'model'):
+            del self.model  # 删除属性引用
+            self.model = None
+
+        # 释放 PyTorch GPU 内存
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
     def generate_src(self, videoName: str, content: str)->str:
 
 
@@ -52,7 +62,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
             '.', ',', ';', ':', '!', '?', '"', "'", '(', ')', '[', ']', '{', '}', '<', '>', '-', '–', '—', '_',
             '=', '+', '*', '&', '@', '#', '$', '%', '^', '/', '\\', '|', '~', '`',
             # 空格/空白符（文本处理高频，含全角/半角/制表符）
-            ' ', '　', '\t',
+            ' ', '　', '\t','.',
             # 省略号/破折号变体（避免不同输入法的符号差异）
             '⋯', '—', '―', '‑', '‒',
             # 小说/排版低频但会出现的符号
@@ -63,7 +73,7 @@ class Whisper_Sybtitle_Util(Base_Subtitle_Util):
 
         content_no_punct = re.sub(pattern, '', content)
         # ========== 步骤2：获取词级时间戳 ==========
-        result = self.model.transcribe(
+        result = self.model.transcribe( # type: ignore
             audio=f"/article/audio/{videoName}.wav",
             language=Setting.src_language,
             initial_prompt="",

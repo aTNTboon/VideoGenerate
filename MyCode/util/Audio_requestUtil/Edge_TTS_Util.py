@@ -8,6 +8,9 @@ class Edge_TTS_Util(Base_Audio_Util):
     def __init__(self):
         super().__init__()
 
+    def close(self):
+        return
+
     async def _audio_request_async(self, uid, story):
         # 确保目录存在
         os.makedirs("/article/audio", exist_ok=True)

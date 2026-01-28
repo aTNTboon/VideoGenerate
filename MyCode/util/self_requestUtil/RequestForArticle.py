@@ -7,7 +7,10 @@ from MyCode.util.self_requestUtil.Base_Request import Base_Request
 class RequestForArticle(Base_Request):
     def __init__(self) -> None:
         pass
-    
+    def close(self):
+        return
+
+
     def request(self, message)->str:
         
         headers = {

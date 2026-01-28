@@ -1,3 +1,6 @@
-请对以下场景生成关键词用于图片生成。用一句简短的英文。请注意，这将是我用来ai生图的提示词，请不要给成中文关键词，我是要你描绘场景，把除此之外的无法用图像表现的东西去掉。场景可以不止一个，结尾必须加上一个"|"。每30个字就要生成一个场景。
-比如"sky,beautiful scene| xiao goes home|"。千万不要给多余内容，千万不要，会出现很大的问题。
+请对以下场景生成关键词用于图片生成。用一句简短的英文。请注意，这将是我用来ai生图的提示词，请不要给成中文关键词，我是要你描绘场景，把除此之外的无法用图像表现的东西去掉。场景可以不止一个，结尾必须加上一个"|"。每一句话就要生成一个场景。
+场景描述：明确背景、环境、时间、光线
+主体描述：角色、物体、数量、动作
+风格/细节：光影、材质、风格（如科幻、现实、插画）
+比如"Fantasy castle in a misty forest, morning fog, sunlight filtering through trees, ultra-detailed, cinematic lighting|Sci-fi city night scene, rainy reflections, neon lights flickering, towering skyscrapers|"。千万不要给多余内容，千万不要，会出现很大的问题。
 我给你的文字是:
