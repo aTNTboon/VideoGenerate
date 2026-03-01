@@ -18,20 +18,17 @@ prompt = """
 
 # === 请求体结构 ===
 payload = {
-    "model": "qwen-image-plus",   # 或 "qwen-image"
+    "model": "qwen-image-plus",  # 或 "qwen-image"
     "input": {
         "prompt": prompt,
         "negative_prompt": "低质量, 模糊, 失真",  # 不希望出现的内容
-        "size": "1080*1920",       # 图像分辨率
-        "prompt_extend": True,     # 启用自动润色优化提示词
-        "watermark": False         # 是否加水印
-    }
+        "size": "1080*1920",  # 图像分辨率
+        "prompt_extend": True,  # 启用自动润色优化提示词
+        "watermark": False,  # 是否加水印
+    },
 }
 
-headers = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
-}
+headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
 
 # === 发起生成请求 ===
 response = requests.post(URL, json=payload, headers=headers)

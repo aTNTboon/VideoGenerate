@@ -1,18 +1,17 @@
-
 from MyCode.Setting import Setting
 from MyCode.util.Image_Generate_Util import GetPathFromPrompt_ID
-from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import Base_Image_Generate_Util
+from MyCode.util.Image_Generate_Util.Base_Image_Generate_Util import (
+    Base_Image_Generate_Util,
+)
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
 
+
 class Base_Video_Util:
-    def __init__(self,RU:Base_Request):
-        self.RU=RU
+    def __init__(self, RU: Base_Request):
+        self.RU = RU
         pass
-    
+
         raise Exception("unimplement")
-    def generateFrame(self,content)->list[str]:
+
+    def generateFrame(self, content) -> list[str]:
         raise NotImplementedError
-
-
-
-    

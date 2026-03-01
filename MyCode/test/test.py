@@ -29,15 +29,21 @@ torch.cuda.empty_cache()
 model_id = "runwayml/stable-diffusion-v1-5"
 
 # UNet
-unet = UNet2DConditionModel.from_pretrained(model_id, subfolder="unet", torch_dtype=torch_dtype).to(device)
+unet = UNet2DConditionModel.from_pretrained(
+    model_id, subfolder="unet", torch_dtype=torch_dtype
+).to(device)
 unet.set_attention_slice("auto")  # attention slicing，节省显存
 
 # VAE
-vae = AutoencoderKL.from_pretrained(model_id, subfolder="vae", torch_dtype=torch_dtype).to(device)
+vae = AutoencoderKL.from_pretrained(
+    model_id, subfolder="vae", torch_dtype=torch_dtype
+).to(device)
 
 # Tokenizer & TextEncoder
 tokenizer = CLIPTokenizer.from_pretrained(model_id, subfolder="tokenizer")
-text_encoder = CLIPTextModel.from_pretrained(model_id, subfolder="text_encoder", torch_dtype=torch_dtype).to(device)
+text_encoder = CLIPTextModel.from_pretrained(
+    model_id, subfolder="text_encoder", torch_dtype=torch_dtype
+).to(device)
 
 # Scheduler
 scheduler = DDIMScheduler.from_pretrained(model_id, subfolder="scheduler")
@@ -46,12 +52,16 @@ scheduler.set_timesteps(num_inference_steps)
 
 # ==== 文本编码 ====
 prompt = "a simple flat illustration of a robot"
-text_inputs = tokenizer([prompt], padding="max_length", max_length=77, return_tensors="pt")
+text_inputs = tokenizer(
+    [prompt], padding="max_length", max_length=77, return_tensors="pt"
+)
 text_embeddings = text_encoder(text_inputs.input_ids.to(device)).last_hidden_state
 
 # ==== 初始 latent（512x512，batch=1） ====
 height, width = 512, 512
-latent = torch.randn((1, unet.in_channels, height//8, width//8), device=device, dtype=torch_dtype)
+latent = torch.randn(
+    (1, unet.in_channels, height // 8, width // 8), device=device, dtype=torch_dtype
+)
 
 # ==== 多步采样 + tqdm 进度条 ====
 progress_bar = tqdm(range(num_inference_steps), desc="Generating image")
@@ -73,4 +83,3 @@ image = (image * 255).round().astype(np.uint8)
 pil_image = Image.fromarray(image[0])
 pil_image.save("out.png")
 print("Image saved as out.png")
-

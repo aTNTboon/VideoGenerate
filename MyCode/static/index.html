@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频列表 - Step+VideoID分组</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* 页面标题 */
+        .page-title {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Step 切换栏 */
+        .step-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .step-tab {
+            padding: 8px 16px;
+            background: #e6e9ed;
+            border: none;
+            border-radius: 6px;
+            color: #34495e;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .step-tab:hover {
+            background: #d5d8db;
+        }
+
+        .step-tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .step-tab.loading {
+            background: #f1c40f;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        /* 加载/空数据提示 */
+        .tip-box {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-size: 14px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Step区块样式 */
+        .step-block {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        /* Step标题栏 */
+        .step-header {
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .step-header .count {
+            background: white;
+            color: #3498db;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .step-header .toggle-icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .step-header .toggle-icon.rotate {
+            transform: rotate(180deg);
+        }
+
+        /* Step内容区域 */
+        .step-content {
+            padding: 20px;
+            display: none; /* 默认折叠 */
+        }
+
+        .step-content.show {
+            display: block;
+        }
+
+        /* ---------------- 新增：VideoID子区块样式 ---------------- */
+        .video-id-block {
+            background: #f8f9fa;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .video-id-header {
+            background: #2980b9;
+            color: white;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .video-id-header .count {
+            background: white;
+            color: #2980b9;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .video-id-header .toggle-icon {
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        .video-id-header .toggle-icon.rotate {
+            transform: rotate(180deg);
+        }
+
+        .video-id-content {
+            padding: 15px;
+            display: none;
+        }
+
+        .video-id-content.show {
+            display: block;
+        }
+        /* -------------------------------------------------------- */
+
+        /* 视频卡片样式 */
+        .video-card {
+            border: 1px solid #e6e9ed;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #fafbfc;
+        }
+
+        .video-card:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 卡片标题 */
+        .card-title {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #e6e9ed;
+        }
+
+        /* 字段样式 */
+        .field-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .field-label {
+            display: inline-block;
+            width: 100px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .field-value {
+            color: #34495e;
+        }
+
+        /* 长文本折叠样式 */
+        .long-text {
+            position: relative;
+            max-height: 80px;
+            overflow: hidden;
+            transition: max-height 0.3s;
+        }
+
+        .long-text.expand {
+            max-height: none;
+        }
+
+        .toggle-btn {
+            color: #3498db;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        /* 音频播放样式 */
+        audio {
+            margin-top: 8px;
+            width: 100%;
+            outline: none;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .step-header {
+                font-size: 16px;
+            }
+            .video-id-header {
+                font-size: 14px;
+            }
+            .field-label {
+                width: 80px;
+                font-size: 13px;
+            }
+            .field-value {
+                font-size: 13px;
+            }
+            .step-tab {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="page-title">视频列表 - Step+VideoID分组展示</h1>
+
+    <!-- Step 切换按钮栏 -->
+    <div class="step-tabs" id="stepTabs">
+        <button class="step-tab" data-step="0">Step 0</button>
+        <button class="step-tab" data-step="1">Step 1</button>
+        <button class="step-tab" data-step="2">Step 2</button>
+        <button class="step-tab" data-step="3">Step 3</button>
+        <button class="step-tab" data-step="4">Step 4</button>
+        <button class="step-tab" data-step="5">Step 5</button>
+        <button class="step-tab" data-step="6">Step 6</button>
+    </div>
+
+    <!-- 提示/加载区域 -->
+    <div class="tip-box" id="tipBox">请点击上方Step按钮加载对应数据</div>
+
+    <!-- Step区块容器 -->
+    <div id="stepBlocksContainer"></div>
+
+    <script>
+        // 全局变量：存储已加载的step数据
+        const loadedStepData = {};
+        // 情绪值映射（根据业务定义）
+        const moodMap = {
+            0: "中性",
+            1: "温和",
+            2: "激昂",
+            3: "忐忑",
+            4: "震惊",
+            5: "震撼/神圣"
+        };
+
+        /**
+         * 新增：按video_id分组视频数据
+         * @param {Array} list - 同一step下的视频列表
+         * @returns {Object} 分组后的数据 { video_id: [视频列表] }
+         */
+        function groupByVideoId(list) {
+            const grouped = {};
+            list.forEach(item => {
+                const videoId = item.video_id;
+                if (!grouped[videoId]) {
+                    grouped[videoId] = [];
+                }
+                grouped[videoId].push(item);
+            });
+            return grouped;
+        }
+
+        /**
+         * 接口请求函数：获取指定step的视频数据
+         * @param {Number} step - 步骤值（0-6）
+         * @returns {Promise<Array>} 视频列表
+         */
+        async function fetchStepData(step) {
+            try {
+                // 标记按钮为加载中
+                const tabBtn = document.querySelector(`.step-tab[data-step="${step}"]`);
+                tabBtn.classList.add('loading', 'active');
+                const tipBox = document.getElementById('tipBox');
+                tipBox.textContent = `正在加载 Step ${step} 数据...`;
+
+                // 发起接口请求
+                const response = await fetch(`http://127.0.0.1:5000/getStep/${step}`);
+                if (!response.ok) {
+                    throw new Error(`接口请求失败：${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                if (result.code !== 200) {
+                    throw new Error(`接口返回错误：${result.msg || '未知错误'}`);
+                }
+
+                const videoList = result.data?.videoList || [];
+                loadedStepData[step] = videoList; // 缓存已加载数据
+
+                // 更新提示
+                if (videoList.length === 0) {
+                    tipBox.textContent = `Step ${step} 暂无数据`;
+                } else {
+                    tipBox.textContent = `Step ${step} 加载完成，共 ${videoList.length} 条数据`;
+                }
+
+                // 渲染该step的区块（含video_id分组）
+                renderStepBlock(step, videoList);
+
+                return videoList;
+            } catch (error) {
+                document.getElementById('tipBox').textContent = `加载 Step ${step} 失败：${error.message}`;
+                console.error(`Step ${step} 加载失败：`, error);
+                return [];
+            } finally {
+                // 移除加载中状态
+                const tabBtn = document.querySelector(`.step-tab[data-step="${step}"]`);
+                tabBtn.classList.remove('loading');
+            }
+        }
+
+        /**
+         * 渲染单个Step区块（含video_id分组）
+         * @param {Number} step - 步骤值
+         * @param {Array} videoList - 视频列表
+         */
+        function renderStepBlock(step, videoList) {
+            const container = document.getElementById('stepBlocksContainer');
+            
+            // 先移除该step已存在的区块（避免重复）
+            const existingBlock = document.querySelector(`.step-block[data-step="${step}"]`);
+            if (existingBlock) {
+                existingBlock.remove();
+            }
+
+            // 创建Step区块
+            const stepBlock = document.createElement('div');
+            stepBlock.className = 'step-block';
+            stepBlock.dataset.step = step;
+
+            // Step标题栏
+            const stepHeader = document.createElement('div');
+            stepHeader.className = 'step-header';
+            stepHeader.innerHTML = `
+                <span>步骤 ${step}</span>
+                <span class="count">共 ${videoList.length} 条视频</span>
+                <span class="toggle-icon">▼</span>
+            `;
+
+            // Step内容区域
+            const stepContent = document.createElement('div');
+            stepContent.className = 'step-content show'; // 默认展开
+
+            // 渲染视频数据：按video_id分组
+            if (videoList.length === 0) {
+                stepContent.innerHTML = '<div class="tip-box">该Step暂无视频数据</div>';
+            } else {
+                // 按video_id分组
+                const groupedByVideoId = groupByVideoId(videoList);
+                // 按video_id升序排列
+                const sortedVideoIds = Object.keys(groupedByVideoId).sort((a, b) => a - b);
+
+                sortedVideoIds.forEach(videoId => {
+                    const videos = groupedByVideoId[videoId];
+                    // 创建video_id子区块
+                    const videoIdBlock = document.createElement('div');
+                    videoIdBlock.className = 'video-id-block';
+                    videoIdBlock.dataset.videoId = videoId;
+
+                    // video_id标题栏
+                    const videoIdHeader = document.createElement('div');
+                    videoIdHeader.className = 'video-id-header';
+                    videoIdHeader.innerHTML = `
+                        <span>视频ID：${videoId}</span>
+                        <span class="count">共 ${videos.length} 条条目</span>
+                        <span class="toggle-icon">▼</span>
+                    `;
+
+                    // video_id内容区域
+                    const videoIdContent = document.createElement('div');
+                    videoIdContent.className = 'video-id-content show'; // 默认展开
+
+                    // 渲染该video_id下的所有视频卡片
+                    videos.forEach((video, index) => {
+                        const videoCard = createVideoCard(video, index);
+                        videoIdContent.appendChild(videoCard);
+                    });
+
+                    // 组装video_id区块
+                    videoIdBlock.appendChild(videoIdHeader);
+                    videoIdBlock.appendChild(videoIdContent);
+                    stepContent.appendChild(videoIdBlock);
+
+                    // 绑定video_id区块折叠/展开事件
+                    videoIdHeader.addEventListener('click', () => {
+                        videoIdContent.classList.toggle('show');
+                        const icon = videoIdHeader.querySelector('.toggle-icon');
+                        icon.classList.toggle('rotate');
+                    });
+                });
+            }
+
+            // 组装Step区块
+            stepBlock.appendChild(stepHeader);
+            stepBlock.appendChild(stepContent);
+            container.appendChild(stepBlock);
+
+            // 绑定Step区块折叠/展开事件
+            stepHeader.addEventListener('click', () => {
+                stepContent.classList.toggle('show');
+                const icon = stepHeader.querySelector('.toggle-icon');
+                icon.classList.toggle('rotate');
+            });
+        }
+
+        /**
+         * 创建单个视频卡片
+         * @param {Object} video - 视频数据
+         * @param {Number} index - 索引
+         * @returns {HTMLElement} 视频卡片元素
+         */
+        function createVideoCard(video, index) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+
+            // 生成唯一ID（避免冲突）
+            const sceneTextId = `text-${video.video_id}-scene-${index}`;
+            const sceneBtnId = `btn-${video.video_id}-scene-${index}`;
+            const promptsTextId = `text-${video.video_id}-prompts-${index}`;
+            const promptsBtnId = `btn-${video.video_id}-prompts-${index}`;
+
+            // 处理长文本折叠（scene/prompts）
+            const renderLongText = (text, textId, btnId) => {
+                if (!text) return '<span class="field-value">无</span>';
+                
+                return `
+                    <div id="${textId}" class="long-text field-value">${text}</div>
+                    <span id="${btnId}" class="toggle-btn">展开</span>
+                `;
+            };
+        /**
+         * 渲染删除按钮（带ID绑定、样式、确认提示）
+         * @param {Number/String} id - 要删除的视频ID/条目ID（根据你的业务传对应ID）
+         * @param {Number} step - 所属Step（可选，用于接口请求）
+         * @returns {String} 带删除功能的按钮HTML字符串
+         */
+        const renderDeleteButton = (id, step) => {
+            // 生成唯一按钮ID，避免冲突
+            const btnId = `delete-btn-${id}-${Date.now()}`;
+            
+            // 返回按钮HTML，包含样式+唯一ID，点击事件后续通过事件委托绑定（避免模板字符串嵌套冲突）
+            return `
+                <button 
+                    id="${btnId}" 
+                    class="delete-btn" 
+                    data-id="${id}" 
+                    data-step="${step}"
+                    style="
+                        padding: 4px 12px;
+                        background: #e74c3c;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-top: 10px;
+                        transition: background 0.2s;
+                    "
+                    onclick="deleteVideo(${id})"
+                    onmouseover="this.style.background='#c0392b'"
+                    onmouseout="this.style.background='#e74c3c'"
+                >
+                    删除
+                </button>
+            `;
+        };
+        async function deleteVideo(videoId) {
+            if (!confirm(`确定删除视频ID ${videoId}？`)) return;
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/deleteVideo/${videoId}`, {method: 'DELETE'});
+                const result = await res.json();
+                alert(result.code === 200 ? '删除成功！' : `失败：${result.msg}`);
+                window.location.reload(); // 刷新页面更新数据
+            } catch (err) {
+                alert('网络错误，删除失败');
+            }
+        }
+
+
+            // 音频路径处理（兼容相对/绝对路径）
+            const audioPath = video.audio_path || '';
+            const audioHtml = audioPath 
+                ? `<audio controls src="${audioPath}">您的浏览器不支持音频播放</audio>`
+                : '<span class="field-value">无音频文件</span>';
+
+            // 拼接卡片内容
+            card.innerHTML = `
+                <div class="card-title">条目索引：${index}（UID：${video.uid}）</div>
+                
+                <div class="field-item">
+                    <span class="field-label">步骤：</span>
+                    <span class="field-value">${video.step}</span>
+                </div>
+                <div class="field-item">
+                    <span class="field-label">id:</span>
+                    <span class="field-value">${video.id}</span>
+                    ${renderDeleteButton(video.id)}
+                </div>
+                <div class="field-item">
+                    <span class="field-label">主题：</span>
+                    <span class="field-value">${video.theme}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">情绪：</span>
+                    <span class="field-value">${moodMap[video.mood] || '未知'}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">文本：</span>
+                    <span class="field-value">${video.text || '无'}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">场景：</span>
+                    ${renderLongText(video.scene, sceneTextId, sceneBtnId)}
+
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">提示词：</span>
+                    ${renderLongText(video.prompts, promptsTextId, promptsBtnId)}
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">源文件：</span>
+                    <span class="field-value">${video.src_path || '无'}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">音频路径：</span>
+                    <span class="field-value">${video.audio_path || '无'}</span>
+                    ${audioHtml}
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">音乐路径：</span>
+                    <span class="field-value">${video.music_path || '无'}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">视频路径：</span>
+                    <span class="field-value">${video.video_path || '无'}</span>
+                </div>
+                
+                <div class="field-item">
+                    <span class="field-label">输出路径：</span>
+                    <span class="field-value">${video.output_path || '无'}</span>
+                </div>
+            `;
+
+            // 绑定长文本折叠/展开事件
+            const sceneBtn = card.querySelector(`#${sceneBtnId}`);
+            const sceneText = card.querySelector(`#${sceneTextId}`);
+            if (sceneBtn && sceneText) {
+                sceneBtn.addEventListener('click', () => {
+                    sceneText.classList.toggle('expand');
+                    sceneBtn.textContent = sceneText.classList.contains('expand') ? '收起' : '展开';
+                });
+            }
+
+            const promptsBtn = card.querySelector(`#${promptsBtnId}`);
+            const promptsText = card.querySelector(`#${promptsTextId}`);
+            if (promptsBtn && promptsText) {
+                promptsBtn.addEventListener('click', () => {
+                    promptsText.classList.toggle('expand');
+                    promptsBtn.textContent = promptsText.classList.contains('expand') ? '收起' : '展开';
+                });
+            }
+
+            return card;
+        }
+
+        // 初始化：绑定Step切换按钮事件
+        document.querySelectorAll('.step-tab').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                // 移除所有按钮的active状态
+                document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+                // 标记当前按钮为active
+                btn.classList.add('active');
+                
+                const step = parseInt(btn.dataset.step);
+                // 如果已加载过，直接渲染；否则请求接口
+                if (loadedStepData[step] !== undefined) {
+                    document.getElementById('tipBox').textContent = `Step ${step} 已加载，共 ${loadedStepData[step].length} 条数据`;
+                    renderStepBlock(step, loadedStepData[step]);
+                } else {
+                    await fetchStepData(step);
+                }
+            });
+        });
+    </script>
+    <style>
+        .deleteButton{
+            height: 100px;
+            width: 100px;
+        }
+    </style>
+</body>
+</html>

@@ -1,15 +1,14 @@
-
 from MyCode.Setting import Setting
 
+
 class Base_Image_Generate_Util:
-    def __init__(self,path):
-        if not path or path=="":
-            self.path=Setting.WorkFlows[0]
-            
+    def __init__(self, path):
+        if not path or path == "":
+            self.path = Setting.WorkFlows[0]
+
         else:
-            self.path=path
+            self.path = path
         pass
 
-    def getImage(self,posivite_promp,nagitive_prompt)->list[str]:
+    def getImage(self, posivite_promp, nagitive_prompt) -> list[str]:
         raise NotImplementedError
-        

@@ -1,6 +1,7 @@
-import os
 from pathlib import Path
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import StableDiffusionInpaintPipeline
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import (
+    StableDiffusionInpaintPipeline,
+)
 from diffusers.utils import logging
 
 logging.set_verbosity_error()  # 关闭冗余日志
@@ -13,6 +14,7 @@ diffusers_path = Path("/article/MyCode/workflows/model")
 
 # 创建目录
 diffusers_path.mkdir(parents=True, exist_ok=True)
+
 
 # -----------------------
 # 转换函数
@@ -35,6 +37,7 @@ def convert_ckpt_to_diffusers(ckpt_path: Path, diffusers_path: Path):
     # 保存为 diffusers 格式
     pipe.save_pretrained(str(diffusers_path))
     print("✅ Conversion done!")
+
 
 # -----------------------
 # 执行转换

@@ -1,6 +1,18 @@
-请对以下场景生成关键词用于图片生成。用一句简短的英文。请注意，这将是我用来ai生图的提示词，请不要给成中文关键词，我是要你描绘场景，把除此之外的无法用图像表现的东西去掉。场景可以不止一个，结尾必须加上一个"|"。每一句话就要生成一个场景。
-场景描述：明确背景、环境、时间、光线
-主体描述：角色、物体、数量、动作
-风格/细节：光影、材质、风格（如科幻、现实、插画）
-比如"Fantasy castle in a misty forest, morning fog, sunlight filtering through trees, ultra-detailed, cinematic lighting|Sci-fi city night scene, rainy reflections, neon lights flickering, towering skyscrapers|"。千万不要给多余内容，千万不要，会出现很大的问题。
-我给你的文字是:
+Please generate visual keywords for the following scenes for AI image generation. Use one concise English sentence per scene, no longer than 50 tokens. Only include elements that can be depicted in an image; do not include Chinese or non-visual content. Scenes are separated by "|" and your output must have the same number of "|" as the input. 
+All of the following scenes are connected; please some generate visual keywords that tell a coherent story.please Maintain the contextual coherence between scenes.
+role(optional):male,silver hair, male, blue eye
+Your answer must includes sex
+Scene description: clearly define the background, environment, time of day, and lighting.  
+Main subject: include characters, objects, quantity, and actions.for role, You may optionally include features like silver hair, male, blue eyes if relevant.  
+details: include lighting, textures.
+Every part should be made as the rules.
+For each scene in the input separated by "|",you must generate a corresponding English prompt in one concise sentence, ending with "|", ensuring token length ≤50. Do not add extra content beyond what is visually depictable. Please note: the example below is only an illustration; always choose content according to the scene's style.
+Ensure that each section between '|' contains no more than 50 words, and each section after '|' should record information again. Try to include characters in each scene.your answer need not be  simple as my example. 
+Make the keywords for each sentence more specific,you need to descrie the scene. The content between each '|' can be repeated.Don't make the keywords too short and abstract.You should design an easy story.
+请详细描述每个场景，保证故事的连贯性。
+Example:  
+Input:
+"清晨的树林，阳光从树缝间透射下来|赛博朋克风的都市下着雨。|"
+Output:
+"Misty forest at dawn, golden sunlight filtering through tree gaps, casting soft beams on the dew-covered ground|Rainy cyberpunk city at night, neon lights reflecting on wet streets, futuristic skyscrapers, people walking under glowing umbrellas, creating a moody, high-tech atmosphere|"
+以下是我需要你处理的内容，请你按照以上规则处理完再给我：

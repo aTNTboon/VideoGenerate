@@ -25,7 +25,7 @@
 #         # 获取 writer
 #         writer = get_writer("srt", output_dir="/article/subtitle")  # output_dir="." 表示当前目录
 #         # 调用 writer 生成字幕文件
-#         writer(result, videoName)  # type: ignore 
+#         writer(result, videoName)  # type: ignore
 
 
 # if __name__ == '__main__':

@@ -35,195 +35,37 @@ def npfloat16_to_srt_time(seconds: np.float16) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
 
-class Whisper_Sybtitle_Util(Base_Subtitle_Util):
+import numpy as np
+import torch
+
+
+class Get_SubTitle_Util(Base_Subtitle_Util):
     def __init__(self):
-        super().__init__()
-        self.model = whisper.load_model(Setting.SUBTITLE_MODEL)
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = self.model.to(device)
+        pass
 
     def close(self):
-        # 释放模型引用
         if hasattr(self, "model"):
-            del self.model  # 删除属性引用
+            del self.model
             self.model = None
 
-        # 释放 PyTorch GPU 内存
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
     def generate_src(self, videoName: str, content: str) -> str:
-
-        prefix = [
-            # 中文全角核心标点（基础+小说高频）
-            "。",
-            "！",
-            "？",
-            "；",
-            "，",
-            "——",
-            "…",
-            "……",
-            "“",
-            "”",
-            "‘",
-            "’",
-            "、",
-            "：",
-            "·",
-            "～",
-            "｜",
-            "（",
-            "）",
-            "【",
-            "】",
-            "《",
-            "》",
-            "〔",
-            "〕",
-            "〖",
-            "〗",
-            "〈",
-            "〉",
-            "「",
-            "」",
-            "『",
-            "』",
-            "〃",
-            "々",
-            # 中文全角特殊符号/排版符号
-            "￥",
-            "‰",
-            "％",
-            "＃",
-            "＠",
-            "＆",
-            "＊",
-            "＋",
-            "－",
-            "＝",
-            "＿",
-            "｛",
-            "｝",
-            "｜",
-            "＼",
-            "＜",
-            "＞",
-            "？",
-            "—",
-            # 英文半角全标点（基础+编程/外来文本）
-            ".",
-            ",",
-            ";",
-            ":",
-            "!",
-            "?",
-            '"',
-            "'",
-            "(",
-            ")",
-            "[",
-            "]",
-            "{",
-            "}",
-            "<",
-            ">",
-            "-",
-            "–",
-            "—",
-            "_",
-            "=",
-            "+",
-            "*",
-            "&",
-            "@",
-            "#",
-            "$",
-            "%",
-            "^",
-            "/",
-            "\\",
-            "|",
-            "~",
-            "`",
-            "×",
-            "÷"
-            # 空格/空白符（文本处理高频，含全角/半角/制表符）
-            " ",
-            "　",
-            "\t",
-            ".",
-            # 省略号/破折号变体（避免不同输入法的符号差异）
-            "⋯",
-            "—",
-            "―",
-            "‑",
-            "‒",
-            "≤",
-            "≥",
-            # 小说/排版低频但会出现的符号
-            "※",
-            "◆",
-            "◇",
-            "△",
-            "▲",
-            "●",
-            "○",
-            "〖",
-            "〗",
-            "〝",
-            "〞",
-        ]
-
-        pattern = "[" + re.escape("".join(prefix)) + "]"
-
-        content_no_punct = re.sub(pattern, "", content)
-        # ========== 步骤2：获取词级时间戳 ==========
-        result = self.model.transcribe(  # type: ignore
-            audio=f"/article/audio/{videoName}.wav",
-            language=Setting.src_language,
-            initial_prompt="",
-            task="transcribe",
-            verbose=False,
-            word_timestamps=True,
-            fp16=False,
-            temperature=0.0,
-            best_of=1,
-            condition_on_previous_text=False,
-        )
-
-        content_index = 0
         srt_path = f"/article/subtitle/{videoName}.srt"
 
-        with open(srt_path, "w") as w:
-            index = 1
-            segments = result["segments"]
-            for segment in segments:
-                w.write(f"{index}\n")
-                start: np.float16 = segment["start"]  # type: ignore
-                end: np.float16 = segment["end"]  # type: ignore
-                w.write(
-                    f"{npfloat16_to_srt_time(start)} --> {npfloat16_to_srt_time(end)}\n"
-                )
-                text: str = segment["text"].strip()  # type: ignore
-                text_chars = list(text)  # 转成列表
-                for i in range(len(text_chars)):
-                    if text_chars[i] not in prefix:
-                        text_chars[i] = content_no_punct[content_index]
-                        content_index += 1  # 替换后索引向后移动
+        # 生成 SRT 内容（单条字幕）
+        srt_content = f"""{content}"""
 
-                        if content_index >= len(content_no_punct):
-                            break
+        # 写入文件
+        with open(srt_path, "w", encoding="utf-8") as f:
+            f.write(srt_content)
 
-                w.write("".join(text_chars))
-                w.write("\n\n")
-                index += 1
-                # 1. 删除Whisper模型的引用（核心：只清理self.model）
         return srt_path
 
 
 if __name__ == "__main__":
-    wu = Whisper_Sybtitle_Util()
+    wu = Get_SubTitle_Util()
     wu.generate_src(
         "1769600064_0",
         "刺耳的刹车声撕裂午后的宁静时，林衍正盯着手机银行里三位数的余额发呆。重型卡车的阴影像天幕坍塌般覆来，他甚至能看清司机惊慌变形的脸，以及自己飞离地面时，口袋里刚皱巴巴塞进去的兼职工资条。“叮——检测到致命创伤触发，因果结算启动。”冰冷的机械音直接砸进脑海，没有丝毫缓冲。林衍的意识停留在失重的瞬间，眼前却突兀弹出一块半透明的蓝色面板，像极了他上班摸鱼时看的股票交易软件，只是上面的内容足以让任何人心胆俱裂。【结算单编号：SY-二零二六零一二七-零零一】【目标结果：林衍，男性，二四岁，即时性多器官衰竭死亡】【触发原因：机动车撞击（第三方过失）】【阵列记录：监控三二四一号、路人目击×三、生物体征衰减九八百分号】【到账时点：当前时刻（延迟倒计时：零零:零零:零三）】【是否启用“结果延期”功能？】倒计时的红色数字疯狂跳动，每一下都像敲在心脏上。林衍大脑一片空白，求生的本能压过了对这诡异面板的疑惑——管它是什么，只要能活。他几乎是凭着本能在意识里呐喊：“启用！”",

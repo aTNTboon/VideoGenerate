@@ -1,9 +1,8 @@
-import os
 import requests
 import json
 import uuid
-import time
 import websocket
+
 client_id = str(uuid.uuid4())
 # --- 配置 ---
 workflow_file = "./sese1 (Copy).json"
@@ -16,16 +15,13 @@ with open(workflow_file, "r", encoding="utf-8") as f:
     workflow = json.load(f)
 
 # --- 连接 WS ---
-ws_url_template =f"ws://127.0.0.1:8188/ws?clientId={client_id}"
+ws_url_template = f"ws://127.0.0.1:8188/ws?clientId={client_id}"
 ws = websocket.WebSocket()
 ws.connect(ws_url_template.format(client_id))
 ws.settimeout(1)  # 防止死循环阻塞
 
 # --- POST workflow ---
-payload = {
-    "prompt": workflow,
-    "client_id": client_id
-}
+payload = {"prompt": workflow, "client_id": client_id}
 resp = requests.post(http_url, json=payload)
 prompt_id = resp.json()["prompt_id"]
 print("Prompt ID:", prompt_id)
