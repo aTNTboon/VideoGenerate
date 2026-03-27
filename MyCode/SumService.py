@@ -170,7 +170,7 @@ def getImage(db: VideoDBManager):
 
 
 
-def getVideo(db: VideoDBManager):
+def getVideo(db: VideoDBManager, video_editor=VideoComposer):
 
     # 1️⃣ 查询所有 step=2 的记录
     step2_videos = db.get_pending_videos(step=3)
@@ -201,8 +201,8 @@ def getVideo(db: VideoDBManager):
             os.makedirs("/article/video", exist_ok=True)
             os.makedirs("/article/video/sub", exist_ok=True)
             # 实际生成逻辑可替换为：
-            VideoComposer.images_to_video(paths, audio_path, temp_video_path)
-            VideoComposer.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
+            video_editor.images_to_video(paths, audio_path, temp_video_path)
+            video_editor.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
             os.remove(temp_video_path)
 
             db.update_field(id, "output_path", temp_sub_video_path)

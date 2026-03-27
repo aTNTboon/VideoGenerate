@@ -4,13 +4,17 @@ import flask
 from flask import request
 
 from MyCode.sqlManager import VideoDBManager
+from MyCode.video_creation import (
+    DirectSubtitleRequest,
+    MoviePyVideoEditor,
+    PlainTextSubtitleProvider,
+    VideoCreationService,
+    copy_video_to_workspace,
+    persist_uploaded_subtitle,
+    persist_uploaded_video,
+)
 from MyCode.video_repository import SqlVideoRepository
 from MyCode.video_service import VideoQueryService
-
-app = flask.Flask(__name__)
-_db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
-repo = SqlVideoRepository(_db)
-video_service = VideoQueryService(repo)
 
 
 class R(TypedDict):
@@ -25,6 +29,20 @@ def create_basic_response(code: int, msg: str, data: Dict[str, Any]) -> R:
 
 def create_success_response(data: Dict[str, Any]) -> R:
     return {"code": 200, "msg": "", "data": data}
+
+
+def build_dependencies() -> tuple[SqlVideoRepository, VideoQueryService, VideoCreationService]:
+    db = VideoDBManager(host="localhost", user="algernon", password="123", db="video_db")
+    repo = SqlVideoRepository(db)
+    video_service = VideoQueryService(repo)
+    creation_service = VideoCreationService(
+        subtitle_provider=PlainTextSubtitleProvider(), video_editor=MoviePyVideoEditor()
+    )
+    return repo, video_service, creation_service
+
+
+app = flask.Flask(__name__)
+repo, video_service, creation_service = build_dependencies()
 
 
 @app.route("/getStep/<step>", methods=["GET"])
@@ -129,6 +147,40 @@ def delete_finished_video(fid):
     try:
         cnt = repo.delete_finished_video(fid)
         return create_success_response(data={"deleted": cnt})
+    except Exception as e:
+        return create_basic_response(code=500, msg=str(e), data={})
+
+
+@app.route("/video/addSubtitle", methods=["POST"])
+def add_subtitle_to_video():
+    """Support direct video upload/path + subtitle text/file, then generate subtitled video."""
+    try:
+        video_path = request.form.get("video_path")
+        video_file = request.files.get("video")
+        subtitle_file = request.files.get("subtitle")
+        subtitle_text = request.form.get("subtitle_text")
+        output_path = request.form.get("output_path")
+
+        if video_file:
+            video_path = persist_uploaded_video(video_file)
+        elif video_path:
+            video_path = copy_video_to_workspace(video_path)
+
+        if not video_path:
+            return create_basic_response(400, "必须提供 video 文件或 video_path", {})
+
+        subtitle_path = None
+        if subtitle_file:
+            subtitle_path = persist_uploaded_subtitle(subtitle_file)
+
+        request_dto = DirectSubtitleRequest(
+            video_path=video_path,
+            subtitle_text=subtitle_text,
+            subtitle_path=subtitle_path,
+            output_path=output_path,
+        )
+        result_path = creation_service.add_subtitle_to_direct_video(request_dto)
+        return create_success_response(data={"videoPath": result_path})
     except Exception as e:
         return create_basic_response(code=500, msg=str(e), data={})
 
