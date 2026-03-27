@@ -21,6 +21,7 @@ import random
 from moviepy.editor import ImageClip, AudioFileClip, CompositeVideoClip
 from moviepy.audio.fx.volumex import volumex
 from PIL import Image
+from MyCode.core.library.result_paths import ResultPathManager
 
 
 def images_to_video(images: list[str], audio_path, output_path, image_volume=1.0):
@@ -187,34 +188,29 @@ def add_subtitles(video_path: str, srt_path: str, output_path: str):
 def concatVideos(video_file: list[str], video_name: str, music_path: str | None):
     from moviepy.editor import VideoFileClip, concatenate_videoclips
 
-    # 视频文件列表
+    abs_video_files = [ResultPathManager.to_absolute(f) for f in video_file]
+    clips = [VideoFileClip(f) for f in abs_video_files]
 
-    # 1. 读取所有视频
-    clips = [VideoFileClip(f) for f in video_file]
-
-    # 2. 拼接
-    final_clip = concatenate_videoclips(
-        clips, method="compose"
-    )  # method="compose" 保证不同分辨率可以拼接
-    # trim 0.15s from start and end
+    final_clip = concatenate_videoclips(clips, method="compose")
     if final_clip.duration and final_clip.duration > 0.3:
         final_clip = final_clip.subclip(0.15, final_clip.duration - 0.15)
 
-    os.makedirs("/article/result", exist_ok=True)
-    os.makedirs("/article/result/temp", exist_ok=True)
-    temp_output = f"/article/result/temp/{video_name}.mp4"
-    output = f"/article/result/{video_name}.mp4"
-    # 3. 输出
-    final_clip.write_videofile(temp_output, codec="libx264", audio_codec="aac", fps=24)
+    temp_dir = ResultPathManager.subdir("temp")
+    output_dir = ResultPathManager.subdir("video")
+    temp_output = temp_dir / f"{video_name}.mp4"
+    output = output_dir / f"{video_name}.mp4"
+
+    final_clip.write_videofile(str(temp_output), codec="libx264", audio_codec="aac", fps=24)
     for clip in clips:
         clip.close()
-    for f in video_file:
+    for f in abs_video_files:
         os.remove(f)
-    if music_path != None and music_path != "":
-        add_audio_to_video(temp_output, music_path, output, 0.5)
+
+    if music_path is not None and music_path != "":
+        add_audio_to_video(str(temp_output), ResultPathManager.to_absolute(music_path), str(output), 0.5)
         os.remove(temp_output)
-        return output
-    return temp_output
+        return ResultPathManager.to_relative(str(output))
+    return ResultPathManager.to_relative(str(temp_output))
 
 
 if __name__ == "__main__":

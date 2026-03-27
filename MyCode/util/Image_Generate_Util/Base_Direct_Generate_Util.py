@@ -1,5 +1,6 @@
 from MyCode.util.Image_Generate_Util.Base_Video_Util import Base_Video_Util
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
+from MyCode.core.library.prompt_library import PromptLibrary
 
 
 class Base_Direct_Generate_Util(Base_Video_Util):
@@ -8,10 +9,7 @@ class Base_Direct_Generate_Util(Base_Video_Util):
         pass
 
     def generateFrame(self, content):
-        text = ""
-        with open("/article/MyCode/prompt/picture_generate.txt", "r") as f:
-            text = f.read()
-        text += content
+        text = PromptLibrary.get_template("picture_generate") + content
         response = self.RU.request(text)
         posivite_promp = ""
         try:
