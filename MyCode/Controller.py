@@ -4,7 +4,7 @@ import flask
 from flask import request
 
 from MyCode.sqlManager import VideoDBManager
-from MyCode.video_creation import (
+from MyCode.core.services.video_creation_service import (
     DirectSubtitleRequest,
     MoviePyVideoEditor,
     PlainTextSubtitleProvider,
@@ -13,8 +13,8 @@ from MyCode.video_creation import (
     persist_uploaded_subtitle,
     persist_uploaded_video,
 )
-from MyCode.video_repository import SqlVideoRepository
-from MyCode.video_service import VideoQueryService
+from MyCode.core.repositories.video_repository import SqlVideoRepository
+from MyCode.core.services.video_query_service import VideoQueryService
 
 
 class R(TypedDict):

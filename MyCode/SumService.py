@@ -69,7 +69,7 @@ DB = "testdb"
 #             })
 #             uid+=1
 def run_sum_service(
-    db: VideoDBManager, content, requestUtil, TTSUtil, SubtitleUtil, name: str
+    db: VideoDBManager, content, requestUtil, audio_service, SubtitleUtil, name: str
 ):
     video_id = int(time.time())
     response = requestUtil.request(content)
@@ -82,7 +82,10 @@ def run_sum_service(
         videoName = f"{video_id}_{uid}"
         if item["scene"] == "":
             continue
-        audio_path = TTSUtil.audio_request(videoName, item["scene"])
+        if hasattr(audio_service, "create_voice"):
+            audio_path = audio_service.create_voice(videoName, item["scene"])
+        else:
+            audio_path = audio_service.audio_request(videoName, item["scene"])
         srt_path = SubtitleUtil.generate_src(videoName, item["scene"])
 
         theme = int(item["theme_id"])

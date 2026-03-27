@@ -1,10 +1,15 @@
+import importlib.util
 import os
 import sqlite3
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, List, Optional
 
-import pymysql
-from pymysql.cursors import DictCursor
+if importlib.util.find_spec("pymysql") is not None:
+    import pymysql
+    from pymysql.cursors import DictCursor
+else:
+    pymysql = None
+    DictCursor = None
 
 
 class VideoDBManager:
@@ -32,6 +37,8 @@ class VideoDBManager:
         )
 
         try:
+            if pymysql is None:
+                raise RuntimeError("pymysql not installed")
             self.conn: Any = pymysql.connect(
                 host=host,
                 user=user,
@@ -64,20 +71,27 @@ class VideoDBManager:
         finally:
             cursor.close()
 
-    def _execute(self, sql: str, params: Iterable[Any] = ()):  # type: ignore
+    def _execute(self, sql: str, params: Iterable[Any] = ()) -> Dict[str, Any]:
         sql = self._adapt_sql(sql)
         with self._cursor() as cursor:
             cursor.execute(sql, tuple(params))
-            return cursor
+            return {
+                "rowcount": cursor.rowcount,
+                "lastrowid": getattr(cursor, "lastrowid", None),
+            }
 
-    def _query_all(self, sql: str, params: Iterable[Any] = ()):  # type: ignore
-        cursor = self._execute(sql, params)
-        rows = cursor.fetchall()
+    def _query_all(self, sql: str, params: Iterable[Any] = ()) -> List[Dict[str, Any]]:
+        sql = self._adapt_sql(sql)
+        with self._cursor() as cursor:
+            cursor.execute(sql, tuple(params))
+            rows = cursor.fetchall()
         return self._normalize_rows(rows)
 
-    def _query_one(self, sql: str, params: Iterable[Any] = ()):  # type: ignore
-        cursor = self._execute(sql, params)
-        row = cursor.fetchone()
+    def _query_one(self, sql: str, params: Iterable[Any] = ()) -> Optional[Dict[str, Any]]:
+        sql = self._adapt_sql(sql)
+        with self._cursor() as cursor:
+            cursor.execute(sql, tuple(params))
+            row = cursor.fetchone()
         if row is None:
             return None
         return self._normalize_row(row)
@@ -297,14 +311,14 @@ class VideoDBManager:
             INSERT INTO finishedVideo (video_id, text, mood, videoPath)
             VALUES (%s, %s, %s, %s)
         """
-        cursor = self._execute(sql, (video_id, text, mood, videoPath))
+        result = self._execute(sql, (video_id, text, mood, videoPath))
         self.conn.commit()
-        return cursor.lastrowid
+        return result.get("lastrowid")
 
     def delete_finished_video(self, id):
-        cursor = self._execute("DELETE FROM finishedVideo WHERE id = %s", (id,))
+        result = self._execute("DELETE FROM finishedVideo WHERE id = %s", (id,))
         self.conn.commit()
-        return cursor.rowcount
+        return result.get("rowcount", 0)
 
     def update_finished_video(
         self, id, video_id=None, text=None, mood=None, videoPath=None
@@ -329,9 +343,9 @@ class VideoDBManager:
 
         sql = f"UPDATE finishedVideo SET {', '.join(updates)} WHERE id = %s"
         params.append(id)
-        cursor = self._execute(sql, params)
+        result = self._execute(sql, params)
         self.conn.commit()
-        return cursor.rowcount
+        return result.get("rowcount", 0)
 
     def query_finished_videos(
         self,
