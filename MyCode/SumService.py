@@ -19,6 +19,8 @@ from typing import Dict
 from MyCode.util.Music_Chioce_Util.Music_Util import generate_music
 from MyCode.util.self_requestUtil.RequestDeepSeek import RequestDeepSeek
 from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
+from MyCode.config.style_catalog import STYLE_NAME_BY_THEME
+from MyCode.core.library.prompt_library import PromptLibrary
 
 # ==== 数据库连接配置 ====
 HOST = "localhost"
@@ -114,10 +116,16 @@ def getprompt(db: VideoDBManager, ba: Type[Base_Video_Util]):
         id: int = int(video["id"])
         if temp_scenes != "":
             temp_scenes += "|"
-        scene = video["scene"]
+
+        scene = str(video.get("scene", ""))
+        text = str(video.get("text", ""))
+        theme = int(video.get("theme", 0) or 0)
+        style_name = STYLE_NAME_BY_THEME.get(theme, "温暖")
+
         if scene == "":
             continue
-        temp_scenes = temp_scenes + scene
+        merged_scene = PromptLibrary.format_scene_context(text=text, scene=scene, style_name=style_name)
+        temp_scenes = temp_scenes + merged_scene
         amount += 1
         ids.append(id)
         if amount >= 8:

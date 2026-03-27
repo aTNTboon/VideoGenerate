@@ -1,5 +1,7 @@
 import os
 
+from MyCode.config.music_catalog import MUSIC_BY_MOOD
+from MyCode.config.style_catalog import STYLE_WORKFLOW_BY_THEME
 from MyCode.sqlManager import VideoDBManager
 
 
@@ -19,16 +21,11 @@ class Setting:
     ImagePath = "/article/image/"
     height = 720
     width = 480
-    style: dict[str, str] = {"0": "GuFeng"}
     src_language = "Chinese"
-    music_dict: dict[int, str | None] = {
-        0: "/article/bgm/common",
-        1: "/article/bgm/sad",
-        2: "/article/bgm/common",
-        3: "/article/bgm/happy",
-        4: "article/bgm/success",
-    }
     apikey_deepseek = "sk-4RA02El8XSHwNCQJ2471085cBd97445eB56075DaD82a567d"
+
+    STYLE_WORKFLOW_BY_THEME = STYLE_WORKFLOW_BY_THEME
+    MUSIC_BY_MOOD = MUSIC_BY_MOOD
 
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_USER = os.getenv("MYSQL_USER", "algernon")
