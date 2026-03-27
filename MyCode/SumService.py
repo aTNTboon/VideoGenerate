@@ -19,6 +19,8 @@ from typing import Dict
 from MyCode.util.Music_Chioce_Util.Music_Util import generate_music
 from MyCode.util.self_requestUtil.RequestDeepSeek import RequestDeepSeek
 from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
+from MyCode.config.style_catalog import STYLE_NAME_BY_THEME
+from MyCode.core.library.prompt_library import PromptLibrary
 
 # ==== 数据库连接配置 ====
 HOST = "localhost"
@@ -69,7 +71,7 @@ DB = "testdb"
 #             })
 #             uid+=1
 def run_sum_service(
-    db: VideoDBManager, content, requestUtil, TTSUtil, SubtitleUtil, name: str
+    db: VideoDBManager, content, requestUtil, audio_service, SubtitleUtil, name: str
 ):
     video_id = int(time.time())
     response = requestUtil.request(content)
@@ -82,7 +84,10 @@ def run_sum_service(
         videoName = f"{video_id}_{uid}"
         if item["scene"] == "":
             continue
-        audio_path = TTSUtil.audio_request(videoName, item["scene"])
+        if hasattr(audio_service, "create_voice"):
+            audio_path = audio_service.create_voice(videoName, item["scene"])
+        else:
+            audio_path = audio_service.audio_request(videoName, item["scene"])
         srt_path = SubtitleUtil.generate_src(videoName, item["scene"])
 
         theme = int(item["theme_id"])
@@ -111,10 +116,16 @@ def getprompt(db: VideoDBManager, ba: Type[Base_Video_Util]):
         id: int = int(video["id"])
         if temp_scenes != "":
             temp_scenes += "|"
-        scene = video["scene"]
+
+        scene = str(video.get("scene", ""))
+        text = str(video.get("text", ""))
+        theme = int(video.get("theme", 0) or 0)
+        style_name = STYLE_NAME_BY_THEME.get(theme, "温暖")
+
         if scene == "":
             continue
-        temp_scenes = temp_scenes + scene
+        merged_scene = PromptLibrary.format_scene_context(text=text, scene=scene, style_name=style_name)
+        temp_scenes = temp_scenes + merged_scene
         amount += 1
         ids.append(id)
         if amount >= 8:
@@ -170,7 +181,7 @@ def getImage(db: VideoDBManager):
 
 
 
-def getVideo(db: VideoDBManager):
+def getVideo(db: VideoDBManager, video_editor=VideoComposer):
 
     # 1️⃣ 查询所有 step=2 的记录
     step2_videos = db.get_pending_videos(step=3)
@@ -201,8 +212,8 @@ def getVideo(db: VideoDBManager):
             os.makedirs("/article/video", exist_ok=True)
             os.makedirs("/article/video/sub", exist_ok=True)
             # 实际生成逻辑可替换为：
-            VideoComposer.images_to_video(paths, audio_path, temp_video_path)
-            VideoComposer.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
+            video_editor.images_to_video(paths, audio_path, temp_video_path)
+            video_editor.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
             os.remove(temp_video_path)
 
             db.update_field(id, "output_path", temp_sub_video_path)

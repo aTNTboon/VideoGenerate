@@ -2,6 +2,7 @@ import json
 import requests
 from MyCode.Setting import Setting
 from MyCode.util.self_requestUtil.Base_Request import Base_Request
+from MyCode.core.library.prompt_library import PromptLibrary
 
 
 class RequestForArticle(Base_Request):
@@ -17,10 +18,7 @@ class RequestForArticle(Base_Request):
             "Authorization": f"{Setting.ApiKey}:{Setting.ApiSecret}",
             "content-type": "application/json",
         }
-        txt = ""
-        with open("/article/MyCode/prompt/article_text_generate.txt") as f:
-            txt = f.read()
-        txt += message
+        txt = PromptLibrary.get_template("article_generate") + message
         payload = {
             "model": "x1",
             "user": "user_id",
