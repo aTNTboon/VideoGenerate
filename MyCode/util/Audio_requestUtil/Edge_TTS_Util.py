@@ -3,6 +3,7 @@ import asyncio
 import edge_tts
 from MyCode.util.Audio_requestUtil.Base_Audio_Util import Base_Audio_Util
 from MyCode.Setting import Setting
+from MyCode.core.library.result_paths import ResultPathManager
 
 
 class Edge_TTS_Util(Base_Audio_Util):
@@ -15,8 +16,8 @@ class Edge_TTS_Util(Base_Audio_Util):
     async def _audio_request_async(self, uid, story):
         """核心异步生成音频逻辑，出错等待20秒后重试"""
         # 确保目录存在
-        os.makedirs("/article/audio", exist_ok=True)
-        path: str = f"/article/audio/{uid}.wav"
+        audio_dir = ResultPathManager.subdir("audio")
+        path: str = str(audio_dir / f"{uid}.wav")
 
         # 核心：出错后等待20秒重试，直到成功
         while True:
@@ -30,7 +31,7 @@ class Edge_TTS_Util(Base_Audio_Util):
                     volume="+100%",
                 )
                 await communicate.save(path)
-                return path  # 成功则返回路径，退出循环
+                return ResultPathManager.to_relative(path)  # 成功则返回路径，退出循环
             except Exception as e:
                 # 捕获所有异常（包含503握手错误）
                 print(f"音频生成失败：{str(e)}，将在20秒后重试...")

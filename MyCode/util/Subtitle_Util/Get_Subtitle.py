@@ -4,6 +4,7 @@ import whisper
 import re
 from MyCode.util.Subtitle_Util.Base_Subtitle_Util import Base_Subtitle_Util
 from MyCode.Setting import Setting
+from MyCode.core.library.result_paths import ResultPathManager
 
 
 import numpy as np
@@ -52,7 +53,7 @@ class Get_SubTitle_Util(Base_Subtitle_Util):
             torch.cuda.empty_cache()
 
     def generate_src(self, videoName: str, content: str) -> str:
-        srt_path = f"/article/subtitle/{videoName}.srt"
+        srt_path = ResultPathManager.subdir("subtitle") / f"{videoName}.srt"
 
         # 生成 SRT 内容（单条字幕）
         srt_content = f"""{content}"""
@@ -61,7 +62,7 @@ class Get_SubTitle_Util(Base_Subtitle_Util):
         with open(srt_path, "w", encoding="utf-8") as f:
             f.write(srt_content)
 
-        return srt_path
+        return ResultPathManager.to_relative(str(srt_path))
 
 
 if __name__ == "__main__":

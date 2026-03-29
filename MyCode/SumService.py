@@ -77,7 +77,7 @@ def run_sum_service(
     response = requestUtil.request(content)
     json_list = self_parse(response, 0)
 
-    os.makedirs("/article/video/temp/", exist_ok=True)
+    ResultPathManager.subdir("video_temp")
     for item in json_list:
         mood: str = item["mood"]
         uid = item["uid"]
@@ -202,21 +202,19 @@ def getVideo(db: VideoDBManager, video_editor=VideoComposer):
 
             # 从数据库获取必要路径
             paths: list[str] = video["video_path"].split(",")  # 帧列表
-            audio_path = video["audio_path"]  # 配音路径
-            srt_path = video["src_path"]  # 字幕路径
+            audio_path = ResultPathManager.to_absolute(video["audio_path"])  # 配音路径
+            srt_path = ResultPathManager.to_absolute(video["src_path"])  # 字幕路径
 
             # 临时和最终视频路径
-            temp_video_path = f"/article/video/temp/{video_id}_{uid}.mp4"
-            temp_sub_video_path = f"/article/video/sub/{video_id}_{uid}.mp4"
-            os.makedirs("/article/video/temp", exist_ok=True)
-            os.makedirs("/article/video", exist_ok=True)
-            os.makedirs("/article/video/sub", exist_ok=True)
+            temp_video_path = ResultPathManager.subdir("video_temp") / f"{video_id}_{uid}.mp4"
+            temp_sub_video_path = ResultPathManager.subdir("video") / f"{video_id}_{uid}.mp4"
+            abs_paths = [ResultPathManager.to_absolute(p) for p in paths if p]
             # 实际生成逻辑可替换为：
             video_editor.images_to_video(paths, audio_path, temp_video_path)
             video_editor.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
             os.remove(temp_video_path)
 
-            db.update_field(id, "output_path", temp_sub_video_path)
+            db.update_field(id, "output_path", ResultPathManager.to_relative(str(temp_sub_video_path)))
             db.update_step(id, 4)
 
 

@@ -187,9 +187,7 @@ def add_subtitle_to_video():
 
 @app.route("/file/<path:filename>", methods=["GET"])
 def file_detail(filename):
-    if str(filename).startswith("article"):
-        filename = "/" + filename
-
+    target = ResultPathManager.resolve_for_serving(filename)
     return flask.send_file(
         filename,
         mimetype="video/mp4",
