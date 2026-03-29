@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from MyCode.core.library.result_paths import ResultPathManager
 from MyCode.core.services.video_creation_service import (
     DirectSubtitleRequest,
     PlainTextSubtitleProvider,
@@ -19,7 +18,7 @@ class FakeEditor:
 
 
 def test_video_creation_service_accepts_text_subtitle(tmp_path):
-    provider = PlainTextSubtitleProvider()
+    provider = PlainTextSubtitleProvider(base_dir=str(tmp_path / "sub"))
     editor = FakeEditor()
     service = VideoCreationService(provider, editor)
 
@@ -35,11 +34,11 @@ def test_video_creation_service_accepts_text_subtitle(tmp_path):
 
     assert result == str(output)
     assert editor.called is not None
-    assert Path(ResultPathManager.to_absolute(editor.called[1])).exists()
+    assert Path(editor.called[1]).exists()
 
 
 def test_subtitle_provider_requires_text_or_path(tmp_path):
-    provider = PlainTextSubtitleProvider()
+    provider = PlainTextSubtitleProvider(base_dir=str(tmp_path))
     try:
         provider.ensure_subtitle_file(None, None)
         assert False, "expected ValueError"

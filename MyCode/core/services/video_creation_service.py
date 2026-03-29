@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import MyCode.util.Video_Edit_Util.VideoComposer as VideoComposer
-from MyCode.core.library.result_paths import ResultPathManager
 
 
 @dataclass
@@ -29,8 +28,9 @@ class IVideoEditor(ABC):
 
 
 class PlainTextSubtitleProvider(ISubtitleProvider):
-    def __init__(self):
-        self.base_dir = ResultPathManager.subdir("subtitle")
+    def __init__(self, base_dir: str = "/article/subtitle"):
+        self.base_dir = base_dir
+        os.makedirs(self.base_dir, exist_ok=True)
 
     def ensure_subtitle_file(self, subtitle_text: str | None, subtitle_path: str | None) -> str:
         if subtitle_path:
@@ -39,19 +39,16 @@ class PlainTextSubtitleProvider(ISubtitleProvider):
             raise ValueError("必须提供 subtitle_text 或 subtitle_path")
 
         sid = uuid.uuid4().hex
-        path = self.base_dir / f"direct_{sid}.srt"
+        path = os.path.join(self.base_dir, f"direct_{sid}.srt")
         with open(path, "w", encoding="utf-8") as f:
             f.write(subtitle_text)
-        return ResultPathManager.to_relative(str(path))
+        return path
 
 
 class MoviePyVideoEditor(IVideoEditor):
     def add_subtitles(self, video_path: str, subtitle_path: str, output_path: str) -> str:
-        video_abs = ResultPathManager.to_absolute(video_path)
-        subtitle_abs = ResultPathManager.to_absolute(subtitle_path)
-        output_abs = ResultPathManager.to_absolute(output_path)
-        VideoComposer.add_subtitles(video_abs, subtitle_abs, output_abs)
-        return ResultPathManager.to_relative(output_abs)
+        VideoComposer.add_subtitles(video_path, subtitle_path, output_path)
+        return output_path
 
 
 class VideoCreationService:
@@ -65,35 +62,35 @@ class VideoCreationService:
         )
         output_path = request.output_path
         if not output_path:
-            output_path = str(ResultPathManager.subdir("video") / f"direct_{uuid.uuid4().hex}.mp4")
-            output_path = ResultPathManager.to_relative(output_path)
-        return self.video_editor.add_subtitles(request.video_path, subtitle_file, output_path)
+            os.makedirs("/article/video/sub", exist_ok=True)
+            output_path = f"/article/video/sub/direct_{uuid.uuid4().hex}.mp4"
+        self.video_editor.add_subtitles(request.video_path, subtitle_file, output_path)
+        return output_path
 
 
-def persist_uploaded_video(file_storage) -> str:
-    base_dir = ResultPathManager.subdir("uploads")
+def persist_uploaded_video(file_storage, base_dir: str = "/article/video/uploads") -> str:
+    os.makedirs(base_dir, exist_ok=True)
     ext = os.path.splitext(file_storage.filename or "upload.mp4")[1] or ".mp4"
     filename = f"upload_{uuid.uuid4().hex}{ext}"
-    path = base_dir / filename
-    file_storage.save(str(path))
-    return ResultPathManager.to_relative(str(path))
+    path = os.path.join(base_dir, filename)
+    file_storage.save(path)
+    return path
 
 
-def persist_uploaded_subtitle(file_storage) -> str:
-    base_dir = ResultPathManager.subdir("subtitle")
+def persist_uploaded_subtitle(file_storage, base_dir: str = "/article/subtitle") -> str:
+    os.makedirs(base_dir, exist_ok=True)
     ext = os.path.splitext(file_storage.filename or "subtitle.srt")[1] or ".srt"
     filename = f"subtitle_{uuid.uuid4().hex}{ext}"
-    path = base_dir / filename
-    file_storage.save(str(path))
-    return ResultPathManager.to_relative(str(path))
+    path = os.path.join(base_dir, filename)
+    file_storage.save(path)
+    return path
 
 
-def copy_video_to_workspace(src_path: str) -> str:
-    src_abs = ResultPathManager.to_absolute(src_path)
-    if not os.path.exists(src_abs):
+def copy_video_to_workspace(src_path: str, base_dir: str = "/article/video/uploads") -> str:
+    if not os.path.exists(src_path):
         raise FileNotFoundError(f"视频文件不存在: {src_path}")
-    base_dir = ResultPathManager.subdir("uploads")
-    ext = os.path.splitext(src_abs)[1] or ".mp4"
-    dst_path = base_dir / f"local_{uuid.uuid4().hex}{ext}"
-    shutil.copy2(src_abs, dst_path)
-    return ResultPathManager.to_relative(str(dst_path))
+    os.makedirs(base_dir, exist_ok=True)
+    ext = os.path.splitext(src_path)[1] or ".mp4"
+    dst_path = os.path.join(base_dir, f"local_{uuid.uuid4().hex}{ext}")
+    shutil.copy2(src_path, dst_path)
+    return dst_path

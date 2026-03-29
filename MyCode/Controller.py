@@ -14,7 +14,6 @@ from MyCode.core.services.video_creation_service import (
     persist_uploaded_video,
 )
 from MyCode.core.repositories.video_repository import SqlVideoRepository
-from MyCode.core.library.result_paths import ResultPathManager
 from MyCode.core.services.video_query_service import VideoQueryService
 
 
@@ -190,7 +189,7 @@ def add_subtitle_to_video():
 def file_detail(filename):
     target = ResultPathManager.resolve_for_serving(filename)
     return flask.send_file(
-        target,
+        filename,
         mimetype="video/mp4",
         as_attachment=False,
         conditional=True,

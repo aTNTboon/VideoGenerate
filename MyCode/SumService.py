@@ -21,7 +21,6 @@ from MyCode.util.self_requestUtil.RequestDeepSeek import RequestDeepSeek
 from MyCode.util.self_requestUtil.RequestForArticle import RequestForArticle
 from MyCode.config.style_catalog import STYLE_NAME_BY_THEME
 from MyCode.core.library.prompt_library import PromptLibrary
-from MyCode.core.library.result_paths import ResultPathManager
 
 # ==== 数据库连接配置 ====
 HOST = "localhost"
@@ -211,8 +210,8 @@ def getVideo(db: VideoDBManager, video_editor=VideoComposer):
             temp_sub_video_path = ResultPathManager.subdir("video") / f"{video_id}_{uid}.mp4"
             abs_paths = [ResultPathManager.to_absolute(p) for p in paths if p]
             # 实际生成逻辑可替换为：
-            video_editor.images_to_video(abs_paths, audio_path, str(temp_video_path))
-            video_editor.add_subtitles(str(temp_video_path), srt_path, str(temp_sub_video_path))
+            video_editor.images_to_video(paths, audio_path, temp_video_path)
+            video_editor.add_subtitles(temp_video_path, srt_path, temp_sub_video_path)
             os.remove(temp_video_path)
 
             db.update_field(id, "output_path", ResultPathManager.to_relative(str(temp_sub_video_path)))
